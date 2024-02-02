@@ -14,13 +14,13 @@ import { handleAxiosError } from './utils';
 export class TheSneakerDatabaseClient {
     protected client: AxiosInstance;
 
-    constructor(rapidApiKey: string, axiosParam: AxiosInstance | CreateAxiosDefaults) {
+    constructor(rapidApiKey: string, axiosParam?: AxiosInstance | CreateAxiosDefaults) {
         this.client = this.configureAxiosInstance(rapidApiKey, axiosParam);
     }
 
     protected configureAxiosInstance(
         rapidApiKey: string,
-        axiosParam: AxiosInstance | CreateAxiosDefaults,
+        axiosParam?: AxiosInstance | CreateAxiosDefaults,
     ): AxiosInstance {
         const instance =
             axiosParam instanceof axios
