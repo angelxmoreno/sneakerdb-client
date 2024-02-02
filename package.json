@@ -1,6 +1,6 @@
 {
     "name": "sneakerdb-client",
-    "version": "0.0.0",
+    "version": "1.0.0-0",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
     "description": "A TypeScript client for interacting with The Sneaker Database API on RapidAPI.",
