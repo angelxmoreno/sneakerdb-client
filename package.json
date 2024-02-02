@@ -1,0 +1,33 @@
+{
+  "name": "sneakerdb-client",
+  "version": "0.0.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "description": "A TypeScript client for interacting with The Sneaker Database API on RapidAPI.",
+  "keywords": ["sneaker", "sdk", "client", "rapidapi", "The Sneaker Database API"],
+  "author": {
+    "name": "Angel S. Moreno",
+    "email": "angelxmoreno@gmail.com"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/angelxmoreno/sneakerdb-client",
+  "bugs": {
+    "url": "https://github.com/angelxmoreno/sneakerdb-client/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/angelxmoreno/sneakerdb-client.git"
+  },
+  "scripts": {
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "bun-types": "latest",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "axios": "^1.6.7",
+    "axios-date-transformer": "^1.0.3",
+    "dotenv": "^16.4.1"
+  }
+}
