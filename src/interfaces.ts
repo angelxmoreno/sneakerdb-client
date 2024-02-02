@@ -8,6 +8,7 @@ export interface Links {
     stockX: string;
     goat: string;
     flightClub: string;
+    stadiumGoods: string;
 }
 
 export interface Sneaker {
@@ -21,6 +22,7 @@ export interface Sneaker {
     retailPrice: number;
     releaseDate: Date;
     releaseYear: number;
+    estimatedMarketValue: number;
     links: Links;
     image: Image;
     story: string;
@@ -34,7 +36,7 @@ export interface GetSneakersOptions {
     silhouette?: string;
     colorway?: string;
     releaseYear?: string;
-    page?: string;
+    page?: number;
     releaseDate?: Date | string;
     sku?: string;
     sort?: string;
