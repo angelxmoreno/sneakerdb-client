@@ -146,4 +146,27 @@ describe('TheSneakerDatabaseClient', () => {
         expect(request.url).toBe('/search');
         expect(request.params).toEqual(searchOptions);
     });
+
+    it('should handle getBrands request', async () => {
+        const brands = ['Nike', 'Jordan'];
+        mockAxios.onGet('/brands').reply(200, brands);
+
+        const response = await theSneakerDBClient.getBrands();
+
+        expect(response.error).toBeUndefined();
+        expect(response.response).toEqual(brands);
+        const request = expectSingleHistoryRequest();
+        expect(request.url).toBe('/brands');
+    });
+
+    it('should handle getBrands request with an error', async () => {
+        mockAxios.onGet('/brands').reply(500, 'Internal Server Error');
+
+        const response = await theSneakerDBClient.getBrands();
+
+        expect(response.response).toBeUndefined();
+        expect(response.error).toBeDefined();
+        const request = expectSingleHistoryRequest();
+        expect(request.url).toBe('/brands');
+    });
 });
