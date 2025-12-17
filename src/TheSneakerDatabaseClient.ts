@@ -2,6 +2,7 @@ import axios, { type AxiosInstance, type CreateAxiosDefaults } from 'axios';
 import { addAxiosDateTransformer, createAxiosDateTransformer } from 'axios-date-transformer';
 
 import type {
+    ApiListResponse,
     GetSneakersOptions,
     GetSneakersResponse,
     MethodResponse,
@@ -44,20 +45,57 @@ export class TheSneakerDatabaseClient {
         }
     }
 
+    protected mapResponse<TInput, TOutput>(
+        result: MethodResponse<TInput>,
+        mapper: (value: TInput) => TOutput
+    ): MethodResponse<TOutput> {
+        if (result.error) {
+            return { error: result.error };
+        }
+
+        if (typeof result.response === 'undefined') {
+            return {};
+        }
+
+        return { response: mapper(result.response) };
+    }
+
+    protected normalizeList<T>(payload: ApiListResponse<T>): T[] {
+        if (Array.isArray(payload)) {
+            return payload;
+        }
+
+        if (Array.isArray(payload.results)) {
+            return payload.results as T[];
+        }
+
+        if (Array.isArray(payload.data)) {
+            return payload.data as T[];
+        }
+
+        return [];
+    }
+
+    protected async requestList<T>(uri: string): Promise<MethodResponse<T[]>> {
+        const result = await this.handleRequest<ApiListResponse<T>>(uri);
+        return this.mapResponse(result, (payload) => this.normalizeList(payload));
+    }
+
     getSneakers(options: GetSneakersOptions): Promise<MethodResponse<GetSneakersResponse>> {
         return this.handleRequest<GetSneakersResponse, GetSneakersOptions>('/sneakers', options);
     }
 
-    getSneakerById(sneakerId: string): Promise<MethodResponse<Sneaker[]>> {
-        return this.handleRequest<Sneaker[]>(`/sneakers/${sneakerId}`);
+    async getSneakerById(sneakerId: string): Promise<MethodResponse<Sneaker[]>> {
+        const result = await this.handleRequest<ApiListResponse<Sneaker>>(`/sneakers/${sneakerId}`);
+        return this.mapResponse(result, (payload) => this.normalizeList(payload));
     }
 
     getBrands(): Promise<MethodResponse<string[]>> {
-        return this.handleRequest<string[]>(`/brands`);
+        return this.requestList<string>(`/brands`);
     }
 
     getGenders(): Promise<MethodResponse<string[]>> {
-        return this.handleRequest<string[]>(`/genders`);
+        return this.requestList<string>(`/genders`);
     }
 
     search(options: SearchOptions): Promise<MethodResponse<SearchResponse>> {
