@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/angelxmoreno/sneakerdb-client/compare/1.2.0...1.3.0) (2025-12-17)
+
+
+### Features
+
+* force v2.0.0\n\nBREAKING CHANGE: trigger 2.0.0 ([314f8c7](https://github.com/angelxmoreno/sneakerdb-client/commit/314f8c7fd3d724d9f9d82020d4e630ab75fcee04))
+
 # [1.2.0](https://github.com/angelxmoreno/sneakerdb-client/compare/1.1.0...1.2.0) (2025-12-17)
 
 
