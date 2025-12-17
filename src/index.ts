@@ -1,6 +1,4 @@
-export { TheSneakerDatabaseClient } from './TheSneakerDatabaseClient';
-
-export {
+export type {
     GetSneakersOptions,
     GetSneakersResponse,
     MethodResponse,
@@ -8,3 +6,4 @@ export {
     SearchResponse,
     Sneaker,
 } from './interfaces';
+export { TheSneakerDatabaseClient } from './TheSneakerDatabaseClient';

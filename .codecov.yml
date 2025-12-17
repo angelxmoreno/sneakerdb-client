@@ -1,0 +1,17 @@
+coverage:
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 1%
+    patch:
+      default:
+        target: 80%
+        threshold: 2%
+ignore:
+  - README.md
+  - AGENTS.md
+  - modernized.md
+  - "*.md"
+  - "**/.github/**"
+  - "**/node_modules/**"

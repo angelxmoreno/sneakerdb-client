@@ -1,8 +1,11 @@
 # Modernization Tasks
 
 ## Adopt Bun Tooling
-- Replace the Node/npm dev workflow with Bun for faster installs and scripts; add a `bunfig.toml` mirroring current npm scripts and update CI workflows accordingly.
-- Verify Bun compatibility for TypeScript build (tsc) and Jest; migrate to Bun test runners if coverage is comparable or add polyfills for unsupported APIs.
+- Install Bun (>=1.2.0 per `package.json` engines) and check in the generated `bun.lock` by running `bun install` so contributors have a canonical lockfile.
+- Replace npm scripts with Bun equivalents in documentation and CI (e.g., `bun run build`, `bun test`); keep `package.json` scripts temporarily for downstream consumers until the migration is complete.
+- Add a `bunfig.toml` capturing environment defaults (Node compatibility flags, test timeouts) and mirror the previous `npm` lifecycle semantics.
+- Verify compatibility of TypeScript compilation, Jest/ts-jest (or Bun test runner + coverage), Release It, and Husky/Lefthook hooks; introduce shims if a dependency assumes the Node/npm CLI.
+- Update contributor docs (README, AGENTS) to mention Bun installation, commonly used commands, and how to fall back to Node if required.
 
 ## Cache Integration Notes
 - The client now supports an optional `Keyv` instance passed as the third constructor argument, enabling contributors to use Redis, SQLite, or other storage backends without prescribing a TTL policy.

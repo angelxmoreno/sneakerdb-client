@@ -1,7 +1,7 @@
-import axios, { AxiosInstance, CreateAxiosDefaults } from 'axios';
+import axios, { type AxiosInstance, type CreateAxiosDefaults } from 'axios';
 import { addAxiosDateTransformer, createAxiosDateTransformer } from 'axios-date-transformer';
 
-import {
+import type {
     GetSneakersOptions,
     GetSneakersResponse,
     MethodResponse,
@@ -12,7 +12,7 @@ import {
 import { handleAxiosError } from './utils';
 
 export class TheSneakerDatabaseClient {
-    protected client: AxiosInstance;
+    readonly client: AxiosInstance;
 
     constructor(rapidApiKey: string, axiosParam?: AxiosInstance | CreateAxiosDefaults) {
         this.client = this.configureAxiosInstance(rapidApiKey, axiosParam);
@@ -20,7 +20,7 @@ export class TheSneakerDatabaseClient {
 
     protected configureAxiosInstance(
         rapidApiKey: string,
-        axiosParam?: AxiosInstance | CreateAxiosDefaults,
+        axiosParam?: AxiosInstance | CreateAxiosDefaults
     ): AxiosInstance {
         const instance =
             axiosParam instanceof axios
