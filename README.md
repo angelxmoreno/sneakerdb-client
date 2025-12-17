@@ -50,7 +50,7 @@ Release builds run `bun run build`, which cleans `dist/`, bundles `src/index.ts`
 
 ### Automated releases
 
-- The `.github/workflows/release.yml` workflow runs on every push to `main` (including Dependabot auto-merges) and executes tests, build, and `semantic-release`.
+- The `.github/workflows/release.yml` workflow runs on every push to `main` (including Dependabot auto-merges) and executes tests, build, and `semantic-release` (using Node 22+ as required by v25).
 - `semantic-release` determines the next version from Conventional Commit history, updates `CHANGELOG.md`, tags the repo, publishes to npm, and opens a GitHub Release.
 - Enable npm Trusted Publishing for this repo (package settings → Publishing → GitHub Actions). No `NPM_TOKEN` secret is required—GitHub issues an OIDC token that npm trusts.
 - `GITHUB_TOKEN` is provided automatically in CI. For local debugging, set `GITHUB_TOKEN` and run `bun run release -- --dry-run`.
