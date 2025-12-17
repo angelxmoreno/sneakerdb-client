@@ -33,7 +33,12 @@ export interface Sneaker {
 
 export type MethodResponse<T> = { error?: Error; response?: T };
 
-export interface GetSneakersOptions {
+export interface BaseOptions {
+    ttl?: number;
+    skipCache?: boolean;
+}
+
+export interface GetSneakersOptions extends BaseOptions {
     limit: number;
     gender?: string;
     silhouette?: string;
@@ -52,7 +57,7 @@ export interface GetSneakersResponse {
     results: Sneaker[];
 }
 
-export interface SearchOptions {
+export interface SearchOptions extends BaseOptions {
     limit: number;
     page?: number;
     query?: string;

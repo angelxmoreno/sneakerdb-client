@@ -3,6 +3,7 @@ import axios, { type AxiosInstance, type CreateAxiosDefaults } from 'axios';
 import { addAxiosDateTransformer, createAxiosDateTransformer } from 'axios-date-transformer';
 import type {
     ApiListResponse,
+    BaseOptions,
     GetSneakersOptions,
     GetSneakersResponse,
     MethodResponse,
@@ -39,9 +40,45 @@ export class TheSneakerDatabaseClient {
         return instance;
     }
 
+    protected partitionOptions<K>(params?: K) {
+        if (!params) {
+            return { cacheOptions: {}, requestParams: undefined };
+        }
+
+        const { ttl, skipCache, ...rest } = params as K & BaseOptions & Record<string, unknown>;
+        const hasParams = Object.keys(rest).length > 0;
+        return {
+            cacheOptions: { ttl, skipCache },
+            requestParams: hasParams ? (rest as Omit<K, keyof BaseOptions>) : undefined,
+        };
+    }
+
+    protected createCacheKey(uri: string, params?: unknown) {
+        if (!params) {
+            return uri;
+        }
+
+        return `${uri}${JSON.stringify(params)}`;
+    }
     protected async handleRequest<T, K = undefined>(uri: string, params?: K): Promise<MethodResponse<T>> {
         try {
-            const { data } = await this.client.get<T>(uri, { params });
+            const { requestParams, cacheOptions } = this.partitionOptions(params);
+            const cacheKey = this.createCacheKey(uri, requestParams);
+            const shouldUseCache = Boolean(this.cache && !cacheOptions.skipCache);
+
+            if (shouldUseCache && this.cache) {
+                const cached = await this.cache.get(cacheKey);
+                if (typeof cached !== 'undefined') {
+                    return { response: cached };
+                }
+            }
+
+            const { data } = await this.client.get<T>(uri, { params: requestParams });
+
+            if (shouldUseCache && this.cache) {
+                await this.cache.set(cacheKey, data, cacheOptions.ttl);
+            }
+
             return { response: data };
         } catch (error) {
             return { error: handleAxiosError(error) };
@@ -79,8 +116,8 @@ export class TheSneakerDatabaseClient {
         return [];
     }
 
-    protected async requestList<T>(uri: string): Promise<MethodResponse<T[]>> {
-        const result = await this.handleRequest<ApiListResponse<T>>(uri);
+    protected async requestList<T>(uri: string, options?: BaseOptions): Promise<MethodResponse<T[]>> {
+        const result = await this.handleRequest<ApiListResponse<T>, BaseOptions>(uri, options);
         return this.mapResponse(result, (payload) => this.normalizeList(payload));
     }
 
@@ -88,17 +125,20 @@ export class TheSneakerDatabaseClient {
         return this.handleRequest<GetSneakersResponse, GetSneakersOptions>('/sneakers', options);
     }
 
-    async getSneakerById(sneakerId: string): Promise<MethodResponse<Sneaker[]>> {
-        const result = await this.handleRequest<ApiListResponse<Sneaker>>(`/sneakers/${sneakerId}`);
+    async getSneakerById(sneakerId: string, options?: BaseOptions): Promise<MethodResponse<Sneaker[]>> {
+        const result = await this.handleRequest<ApiListResponse<Sneaker>, BaseOptions>(
+            `/sneakers/${sneakerId}`,
+            options
+        );
         return this.mapResponse(result, (payload) => this.normalizeList(payload));
     }
 
-    getBrands(): Promise<MethodResponse<string[]>> {
-        return this.requestList<string>(`/brands`);
+    getBrands(options?: BaseOptions): Promise<MethodResponse<string[]>> {
+        return this.requestList<string>(`/brands`, options);
     }
 
-    getGenders(): Promise<MethodResponse<string[]>> {
-        return this.requestList<string>(`/genders`);
+    getGenders(options?: BaseOptions): Promise<MethodResponse<string[]>> {
+        return this.requestList<string>(`/genders`, options);
     }
 
     search(options: SearchOptions): Promise<MethodResponse<SearchResponse>> {

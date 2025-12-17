@@ -1,10 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
+import Keyv from '@keyvhq/core';
 import MockAdapter from 'axios-mock-adapter';
 import type { GetSneakersOptions, GetSneakersResponse, SearchOptions, SearchResponse, Sneaker } from './interfaces';
 import { TheSneakerDatabaseClient } from './TheSneakerDatabaseClient';
 
 describe('TheSneakerDatabaseClient', () => {
     let theSneakerDBClient: TheSneakerDatabaseClient;
+    let cache: Keyv;
     let mockAxios: MockAdapter;
     const sneakerData: Sneaker = {
         id: '5338a798-ac8b-442f-a8b2-71d3a79311a5',
@@ -44,7 +46,8 @@ describe('TheSneakerDatabaseClient', () => {
     };
 
     beforeEach(() => {
-        theSneakerDBClient = new TheSneakerDatabaseClient({ rapidApiKey: 'your-api-key' });
+        cache = new Keyv();
+        theSneakerDBClient = new TheSneakerDatabaseClient({ rapidApiKey: 'your-api-key', cache });
         mockAxios = new MockAdapter(theSneakerDBClient.client);
     });
 
@@ -168,5 +171,38 @@ describe('TheSneakerDatabaseClient', () => {
         expect(response.error).toBeDefined();
         const request = expectSingleHistoryRequest();
         expect(request.url).toBe('/brands');
+    });
+
+    it('caches GET requests by default', async () => {
+        const options: GetSneakersOptions = { limit: 1 };
+        const payload: GetSneakersResponse = { count: 1, results: [sneakerData] };
+        mockAxios.onGet('/sneakers', { params: options }).reply(200, payload);
+
+        const first = await theSneakerDBClient.getSneakers(options);
+        expect(first.response).toEqual(payload);
+        expect(getHistoryRequests()).toHaveLength(1);
+
+        const cached = await theSneakerDBClient.getSneakers(options);
+        expect(cached.response?.count).toBe(payload.count);
+        expect(cached.response?.results[0]?.id).toBe(sneakerData.id);
+        expect(getHistoryRequests()).toHaveLength(1);
+    });
+
+    it('respects skipCache flag', async () => {
+        const options: GetSneakersOptions = { limit: 1 };
+        const primed: GetSneakersResponse = { count: 1, results: [sneakerData] };
+        const fresh: GetSneakersResponse = {
+            count: 1,
+            results: [{ ...sneakerData, id: 'fresh-id' }],
+        };
+        mockAxios.onGet('/sneakers', { params: options }).replyOnce(200, primed);
+        mockAxios.onGet('/sneakers', { params: options }).replyOnce(200, fresh);
+
+        await theSneakerDBClient.getSneakers(options);
+        expect(getHistoryRequests()).toHaveLength(1);
+
+        const bypass = await theSneakerDBClient.getSneakers({ ...options, skipCache: true });
+        expect(bypass.response).toEqual(fresh);
+        expect(getHistoryRequests()).toHaveLength(2);
     });
 });

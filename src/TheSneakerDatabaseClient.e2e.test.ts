@@ -1,4 +1,5 @@
 import { beforeAll, describe, expect, it } from 'bun:test';
+import Keyv from '@keyvhq/core';
 
 import type { GetSneakersResponse, MethodResponse, SearchResponse, Sneaker } from './interfaces';
 import { TheSneakerDatabaseClient } from './TheSneakerDatabaseClient';
@@ -8,6 +9,7 @@ type NonNullableResponse<T> = Exclude<T, undefined>;
 const rapidApiKey = Bun.env.RAPID_API_KEY;
 const shouldRunE2E = Boolean(rapidApiKey && Bun.env.RUN_E2E === 'true');
 let client: TheSneakerDatabaseClient;
+let cache: Keyv;
 
 const expectSuccessful = <T>(result: MethodResponse<T>): NonNullableResponse<T> => {
     expect(result.error).toBeUndefined();
@@ -20,7 +22,8 @@ if (!shouldRunE2E) {
 } else {
     describe('TheSneakerDatabaseClient:e2e', () => {
         beforeAll(() => {
-            client = new TheSneakerDatabaseClient({ rapidApiKey: rapidApiKey ?? '' });
+            cache = new Keyv();
+            client = new TheSneakerDatabaseClient({ rapidApiKey: rapidApiKey ?? '', cache });
         });
 
         describe('->getSneakers()', () => {
@@ -75,6 +78,42 @@ if (!shouldRunE2E) {
                 expect(payload.count).toBeGreaterThan(0);
                 expect(payload.results.length).toBeGreaterThan(0);
                 expect(payload.results[0]).toHaveProperty('name');
+            });
+        });
+
+        describe('cache integration', () => {
+            it('serves cached responses when the network is unavailable', async () => {
+                const options = { limit: 10 };
+                const first = await client.getSneakers(options);
+                expectSuccessful(first);
+
+                const originalGet = client.client.get.bind(client.client);
+                client.client.get = () => {
+                    throw new Error('network disabled');
+                };
+
+                try {
+                    const cached = await client.getSneakers(options);
+                    expectSuccessful(cached);
+                } finally {
+                    client.client.get = originalGet;
+                }
+            });
+
+            it('skips the cache when skipCache is true', async () => {
+                const options = { limit: 10 };
+                await client.getSneakers(options);
+                const originalGet = client.client.get.bind(client.client);
+                client.client.get = () => {
+                    throw new Error('forced network');
+                };
+
+                try {
+                    const bypass = await client.getSneakers({ ...options, skipCache: true });
+                    expect(bypass.error).toBeInstanceOf(Error);
+                } finally {
+                    client.client.get = originalGet;
+                }
             });
         });
     });
