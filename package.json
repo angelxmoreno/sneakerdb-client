@@ -53,6 +53,7 @@
         "lint:fix": "biome check --write ."
     },
     "dependencies": {
+        "@keyvhq/core": "^2.1.11",
         "axios": "^1.13.2",
         "axios-date-transformer": "^1.2.1"
     },

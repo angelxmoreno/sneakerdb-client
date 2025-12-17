@@ -1,3 +1,4 @@
+import type Keyv from '@keyvhq/core';
 import axios, { type AxiosInstance, type CreateAxiosDefaults } from 'axios';
 import { addAxiosDateTransformer, createAxiosDateTransformer } from 'axios-date-transformer';
 import type {
@@ -14,9 +15,11 @@ import { handleAxiosError } from './utils';
 
 export class TheSneakerDatabaseClient {
     readonly client: AxiosInstance;
+    protected cache?: Keyv;
 
-    constructor({ rapidApiKey, axiosParam }: TheSneakerDatabaseClientOptions) {
+    constructor({ rapidApiKey, axiosParam, cache }: TheSneakerDatabaseClientOptions) {
         this.client = this.configureAxiosInstance(rapidApiKey, axiosParam);
+        this.cache = cache;
     }
 
     protected configureAxiosInstance(
