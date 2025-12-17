@@ -39,8 +39,8 @@ jobs:
               return;
             }
 
-            if (pr.mergeable_state === 'dirty') {
-              core.info(`PR #${pull_number} has conflicts. Manual intervention required.`);
+            if (pr.mergeable_state !== 'clean') {
+              core.info(`PR #${pull_number} is not in a clean mergeable state (${pr.mergeable_state}). Manual intervention required.`);
               return;
             }
 
