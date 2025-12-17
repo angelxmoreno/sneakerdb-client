@@ -20,7 +20,7 @@ export class TheSneakerDatabaseClient {
 
     protected configureAxiosInstance(
         rapidApiKey: string,
-        axiosParam?: AxiosInstance | CreateAxiosDefaults,
+        axiosParam?: AxiosInstance | CreateAxiosDefaults
     ): AxiosInstance {
         const instance =
             axiosParam instanceof axios

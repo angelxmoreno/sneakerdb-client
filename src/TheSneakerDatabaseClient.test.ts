@@ -1,8 +1,7 @@
-import MockAdapter from 'axios-mock-adapter';
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
-
-import { TheSneakerDatabaseClient } from './TheSneakerDatabaseClient';
+import MockAdapter from 'axios-mock-adapter';
 import type { GetSneakersOptions, GetSneakersResponse, SearchOptions, SearchResponse, Sneaker } from './interfaces';
+import { TheSneakerDatabaseClient } from './TheSneakerDatabaseClient';
 
 describe('TheSneakerDatabaseClient', () => {
     let theSneakerDBClient: TheSneakerDatabaseClient;
@@ -33,6 +32,16 @@ describe('TheSneakerDatabaseClient', () => {
         story: 'The Air Jordan 1 Retro Low OG GS ‘Mocha’ showcases...',
     };
     const getHistoryRequests = () => mockAxios.history.get ?? [];
+    const expectSingleHistoryRequest = () => {
+        const history = getHistoryRequests();
+        expect(history).toHaveLength(1);
+        const [request] = history;
+        if (!request) {
+            throw new Error('Expected request to be recorded');
+        }
+
+        return request;
+    };
 
     beforeEach(() => {
         theSneakerDBClient = new TheSneakerDatabaseClient('your-api-key');
@@ -65,10 +74,9 @@ describe('TheSneakerDatabaseClient', () => {
 
         expect(response.error).toBeUndefined();
         expect(response.response).toBeDefined();
-        const history = getHistoryRequests();
-        expect(history).toHaveLength(1);
-        expect(history[0]!.url).toBe('/sneakers');
-        expect(history[0]!.params).toEqual(options);
+        const request = expectSingleHistoryRequest();
+        expect(request.url).toBe('/sneakers');
+        expect(request.params).toEqual(options);
     });
 
     it('should handle getSneakers request with an error', async () => {
@@ -87,9 +95,8 @@ describe('TheSneakerDatabaseClient', () => {
         expect(response.error).toBeUndefined();
         expect(response.response).toBeDefined();
         expect(response.response).toEqual(responseObj);
-        const history = getHistoryRequests();
-        expect(history).toHaveLength(1);
-        expect(history[0]!.url).toBe(`/sneakers/${sneakerId}`);
+        const request = expectSingleHistoryRequest();
+        expect(request.url).toBe(`/sneakers/${sneakerId}`);
     });
 
     it('should handle getSneakerById request with an error', async () => {
@@ -99,9 +106,8 @@ describe('TheSneakerDatabaseClient', () => {
 
         expect(response.response).toBeUndefined();
         expect(response.error).toBeDefined();
-        const history = getHistoryRequests();
-        expect(history).toHaveLength(1);
-        expect(history[0]!.url).toBe(`/sneakers/${sneakerId}`);
+        const request = expectSingleHistoryRequest();
+        expect(request.url).toBe(`/sneakers/${sneakerId}`);
     });
 
     it('should handle search request', async () => {
@@ -121,10 +127,9 @@ describe('TheSneakerDatabaseClient', () => {
         expect(response.error).toBeUndefined();
         expect(response.response).toBeDefined();
         expect(response.response).toEqual(responseObj);
-        const history = getHistoryRequests();
-        expect(history).toHaveLength(1);
-        expect(history[0]!.url).toBe('/search');
-        expect(history[0]!.params).toEqual(searchOptions);
+        const request = expectSingleHistoryRequest();
+        expect(request.url).toBe('/search');
+        expect(request.params).toEqual(searchOptions);
     });
 
     it('should handle search request with an error', async () => {
@@ -137,9 +142,8 @@ describe('TheSneakerDatabaseClient', () => {
 
         expect(response.response).toBeUndefined();
         expect(response.error).toBeDefined();
-        const history = getHistoryRequests();
-        expect(history).toHaveLength(1);
-        expect(history[0]!.url).toBe('/search');
-        expect(history[0]!.params).toEqual(searchOptions);
+        const request = expectSingleHistoryRequest();
+        expect(request.url).toBe('/search');
+        expect(request.params).toEqual(searchOptions);
     });
 });

@@ -34,15 +34,15 @@
         "bun": ">=1.2.0"
     },
     "scripts": {
-        "prepare": "husky install",
         "prebuild": "rimraf dist",
         "build": "tsc",
         "test": "bun test",
         "test:coverage": "bun test --coverage",
-        "lint": "eslint . --cache",
-        "lint:fix": "eslint . --cache --fix",
         "release": "release-it --only-version",
-        "check-types": "tsc --noEmit"
+        "check-types": "tsc --noEmit",
+        "prepare": "lefthook install",
+        "lint": "biome check .",
+        "lint:fix": "biome check --write ."
     },
     "dependencies": {
         "axios": "^1.6.7",
@@ -50,58 +50,13 @@
         "dotenv": "^16.4.1"
     },
     "devDependencies": {
-        "@commitlint/cli": "^18.6.0",
-        "@commitlint/config-conventional": "^18.6.0",
+        "@biomejs/biome": "^2.3.9",
+        "@commitlint/cli": "^20.2.0",
+        "@commitlint/config-conventional": "^20.2.0",
+        "@types/bun": "^1.3.4",
         "axios-mock-adapter": "^1.22.0",
-        "bun-types": "^1.3.4",
-        "eslint": "^8.56.0",
-        "eslint-config-universe": "^12.0.0",
-        "husky": "^8.0.0",
-        "lint-staged": "^15.2.1",
-        "prettier": "^3.2.4",
-        "typescript": "^5.3.3"
-    },
-    "peerDependencies": {
-        "@types/bun": "^1.3",
-        "typescript": "^5"
-    },
-    "eslintConfig": {
-        "root": true,
-        "ignorePatterns": [
-            "**/dist/**"
-        ],
-        "extends": [
-            "universe"
-        ],
-        "parser": "@typescript-eslint/parser",
-        "overrides": [
-            {
-                "files": [
-                    "*.json"
-                ],
-                "rules": {
-                    "no-unused-expressions": "off"
-                }
-            }
-        ],
-        "rules": {}
-    },
-    "prettier": {
-        "singleQuote": true,
-        "trailingComma": "all",
-        "arrowParens": "avoid",
-        "semi": true,
-        "useTabs": false,
-        "tabWidth": 4,
-        "printWidth": 120
-    },
-    "lint-staged": {
-        "*.{ts,json}": "eslint --fix"
-    },
-    "commitlint": {
-        "extends": [
-            "@commitlint/config-conventional"
-        ]
+        "lefthook": "^2.0.12",
+        "typescript": "^5.9.3"
     },
     "release-it": {
         "publishConfig": {
