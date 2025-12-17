@@ -33,6 +33,16 @@ client.getSneakers({ limit: 5 }).then(response => {
 });
 ```
 
+## Development
+
+Run local tooling with [Bun](https://bun.sh/):
+
+```bash
+bun run build   # compile TypeScript to dist/
+bun test        # execute Bun:test
+bun test --coverage
+```
+
 ## API
 There are 4 methods available on the client instance:
 - getSneakers: gets a list of sneakers based on the provided options.

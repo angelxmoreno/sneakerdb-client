@@ -1,11 +1,11 @@
-import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
+import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
 
 import { TheSneakerDatabaseClient } from './TheSneakerDatabaseClient';
 import { GetSneakersOptions, GetSneakersResponse, SearchOptions, SearchResponse, Sneaker } from './interfaces';
 
 describe('TheSneakerDatabaseClient', () => {
-    let client: TheSneakerDatabaseClient;
+    let theSneakerDBClient: TheSneakerDatabaseClient;
     let mockAxios: MockAdapter;
     const sneakerData: Sneaker = {
         id: '5338a798-ac8b-442f-a8b2-71d3a79311a5',
@@ -33,8 +33,8 @@ describe('TheSneakerDatabaseClient', () => {
         story: 'The Air Jordan 1 Retro Low OG GS ‘Mocha’ showcases...',
     };
     beforeEach(() => {
-        mockAxios = new MockAdapter(axios);
-        client = new TheSneakerDatabaseClient('your-api-key', {});
+        theSneakerDBClient = new TheSneakerDatabaseClient('your-api-key');
+        mockAxios = new MockAdapter(theSneakerDBClient.client);
     });
 
     afterEach(() => {
@@ -59,7 +59,7 @@ describe('TheSneakerDatabaseClient', () => {
             results: [sneakerData],
         };
         mockAxios.onGet('/sneakers', { params: options }).reply(200, responseObj);
-        const response = await client.getSneakers(options);
+        const response = await theSneakerDBClient.getSneakers(options);
 
         expect(response.error).toBeUndefined();
         expect(response.response).toBeDefined();
@@ -70,7 +70,7 @@ describe('TheSneakerDatabaseClient', () => {
 
     it('should handle getSneakers request with an error', async () => {
         mockAxios.onGet('/sneakers', { params: { limit: 5 } }).reply(500, 'Internal Server Error');
-        const response = await client.getSneakers({ limit: 5 });
+        const response = await theSneakerDBClient.getSneakers({ limit: 5 });
         expect(response.response).toBeUndefined();
         expect(response.error).toBeDefined();
     });
@@ -79,7 +79,7 @@ describe('TheSneakerDatabaseClient', () => {
         const sneakerId = '5338a798-ac8b-442f-a8b2-71d3a79311a5';
         const responseObj: Sneaker = sneakerData;
         mockAxios.onGet(`/sneakers/${sneakerId}`).reply(200, responseObj);
-        const response = await client.getSneakerById(sneakerId);
+        const response = await theSneakerDBClient.getSneakerById(sneakerId);
 
         expect(response.error).toBeUndefined();
         expect(response.response).toBeDefined();
@@ -91,7 +91,7 @@ describe('TheSneakerDatabaseClient', () => {
     it('should handle getSneakerById request with an error', async () => {
         const sneakerId = 'nonexistent-id';
         mockAxios.onGet(`/sneakers/${sneakerId}`).reply(404, 'Not Found');
-        const response = await client.getSneakerById(sneakerId);
+        const response = await theSneakerDBClient.getSneakerById(sneakerId);
 
         expect(response.response).toBeUndefined();
         expect(response.error).toBeDefined();
@@ -111,7 +111,7 @@ describe('TheSneakerDatabaseClient', () => {
             results: [sneakerData],
         };
         mockAxios.onGet('/search', { params: searchOptions }).reply(200, responseObj);
-        const response = await client.search(searchOptions);
+        const response = await theSneakerDBClient.search(searchOptions);
 
         expect(response.error).toBeUndefined();
         expect(response.response).toBeDefined();
@@ -127,7 +127,7 @@ describe('TheSneakerDatabaseClient', () => {
             query: 'Nonexistent Sneaker',
         };
         mockAxios.onGet('/search', { params: searchOptions }).reply(404, 'Not Found');
-        const response = await client.search(searchOptions);
+        const response = await theSneakerDBClient.search(searchOptions);
 
         expect(response.response).toBeUndefined();
         expect(response.error).toBeDefined();

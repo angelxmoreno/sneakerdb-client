@@ -12,7 +12,7 @@ import {
 import { handleAxiosError } from './utils';
 
 export class TheSneakerDatabaseClient {
-    protected client: AxiosInstance;
+    readonly client: AxiosInstance;
 
     constructor(rapidApiKey: string, axiosParam?: AxiosInstance | CreateAxiosDefaults) {
         this.client = this.configureAxiosInstance(rapidApiKey, axiosParam);
