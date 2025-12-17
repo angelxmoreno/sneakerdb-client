@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/angelxmoreno/sneakerdb-client/compare/1.1.0...1.2.0) (2025-12-17)
+
+
+### Features
+
+* integrated caching ([ef70c13](https://github.com/angelxmoreno/sneakerdb-client/commit/ef70c134717bd62ee1b1d9630f22d399ddb91288))
+
 # [1.1.0](https://github.com/angelxmoreno/sneakerdb-client/compare/1.0.0...1.1.0) (2025-12-17)
 
 
