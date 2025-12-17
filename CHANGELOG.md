@@ -1,3 +1,12 @@
+# [2.0.0](https://github.com/angelxmoreno/sneakerdb-client/compare/1.2.0...2.0.0) (2025-12-17)
+
+### Features
+- caching + constructor changes (PR #11 etc.)
+- any other breaking changes worth calling out
+
+### Breaking Changes
+- summarize that the constructor signature changed (now takes options)
+
 # [1.2.0](https://github.com/angelxmoreno/sneakerdb-client/compare/1.1.0...1.2.0) (2025-12-17)
 
 
