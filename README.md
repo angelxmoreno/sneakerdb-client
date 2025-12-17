@@ -11,6 +11,8 @@
 
 Node.js client for interacting with the Sneaker Database API.
 
+See `AGENTS.md` for repository guidelines covering structure, workflows, and contributor conventions.
+
 ## Installation
 
 ```bash
