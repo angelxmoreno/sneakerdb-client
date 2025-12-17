@@ -1,3 +1,10 @@
+## [2.1.1](https://github.com/angelxmoreno/sneakerdb-client/compare/2.1.0...2.1.1) (2025-12-17)
+
+
+### Bug Fixes
+
+* **ci:** quote auto-merge condition ([edbc5f3](https://github.com/angelxmoreno/sneakerdb-client/commit/edbc5f3af55d9afa7fa5618e095a397abd3adfc2))
+
 # [2.1.0](https://github.com/angelxmoreno/sneakerdb-client/compare/2.0.0...2.1.0) (2025-12-17)
 
 
