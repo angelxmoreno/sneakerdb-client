@@ -2,7 +2,7 @@ import MockAdapter from 'axios-mock-adapter';
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
 
 import { TheSneakerDatabaseClient } from './TheSneakerDatabaseClient';
-import { GetSneakersOptions, GetSneakersResponse, SearchOptions, SearchResponse, Sneaker } from './interfaces';
+import type { GetSneakersOptions, GetSneakersResponse, SearchOptions, SearchResponse, Sneaker } from './interfaces';
 
 describe('TheSneakerDatabaseClient', () => {
     let theSneakerDBClient: TheSneakerDatabaseClient;
@@ -32,6 +32,8 @@ describe('TheSneakerDatabaseClient', () => {
         sku: 'CZ0858-102',
         story: 'The Air Jordan 1 Retro Low OG GS ‘Mocha’ showcases...',
     };
+    const getHistoryRequests = () => mockAxios.history.get ?? [];
+
     beforeEach(() => {
         theSneakerDBClient = new TheSneakerDatabaseClient('your-api-key');
         mockAxios = new MockAdapter(theSneakerDBClient.client);
@@ -63,9 +65,10 @@ describe('TheSneakerDatabaseClient', () => {
 
         expect(response.error).toBeUndefined();
         expect(response.response).toBeDefined();
-        expect(mockAxios.history.get.length).toBe(1);
-        expect(mockAxios.history.get[0].url).toBe('/sneakers');
-        expect(mockAxios.history.get[0].params).toEqual(options);
+        const history = getHistoryRequests();
+        expect(history).toHaveLength(1);
+        expect(history[0]!.url).toBe('/sneakers');
+        expect(history[0]!.params).toEqual(options);
     });
 
     it('should handle getSneakers request with an error', async () => {
@@ -77,15 +80,16 @@ describe('TheSneakerDatabaseClient', () => {
 
     it('should handle getSneakerById request', async () => {
         const sneakerId = '5338a798-ac8b-442f-a8b2-71d3a79311a5';
-        const responseObj: Sneaker = sneakerData;
+        const responseObj: Sneaker[] = [sneakerData];
         mockAxios.onGet(`/sneakers/${sneakerId}`).reply(200, responseObj);
         const response = await theSneakerDBClient.getSneakerById(sneakerId);
 
         expect(response.error).toBeUndefined();
         expect(response.response).toBeDefined();
         expect(response.response).toEqual(responseObj);
-        expect(mockAxios.history.get.length).toBe(1);
-        expect(mockAxios.history.get[0].url).toBe(`/sneakers/${sneakerId}`);
+        const history = getHistoryRequests();
+        expect(history).toHaveLength(1);
+        expect(history[0]!.url).toBe(`/sneakers/${sneakerId}`);
     });
 
     it('should handle getSneakerById request with an error', async () => {
@@ -95,8 +99,9 @@ describe('TheSneakerDatabaseClient', () => {
 
         expect(response.response).toBeUndefined();
         expect(response.error).toBeDefined();
-        expect(mockAxios.history.get.length).toBe(1);
-        expect(mockAxios.history.get[0].url).toBe(`/sneakers/${sneakerId}`);
+        const history = getHistoryRequests();
+        expect(history).toHaveLength(1);
+        expect(history[0]!.url).toBe(`/sneakers/${sneakerId}`);
     });
 
     it('should handle search request', async () => {
@@ -116,9 +121,10 @@ describe('TheSneakerDatabaseClient', () => {
         expect(response.error).toBeUndefined();
         expect(response.response).toBeDefined();
         expect(response.response).toEqual(responseObj);
-        expect(mockAxios.history.get.length).toBe(1);
-        expect(mockAxios.history.get[0].url).toBe('/search');
-        expect(mockAxios.history.get[0].params).toEqual(searchOptions);
+        const history = getHistoryRequests();
+        expect(history).toHaveLength(1);
+        expect(history[0]!.url).toBe('/search');
+        expect(history[0]!.params).toEqual(searchOptions);
     });
 
     it('should handle search request with an error', async () => {
@@ -131,8 +137,9 @@ describe('TheSneakerDatabaseClient', () => {
 
         expect(response.response).toBeUndefined();
         expect(response.error).toBeDefined();
-        expect(mockAxios.history.get.length).toBe(1);
-        expect(mockAxios.history.get[0].url).toBe('/search');
-        expect(mockAxios.history.get[0].params).toEqual(searchOptions);
+        const history = getHistoryRequests();
+        expect(history).toHaveLength(1);
+        expect(history[0]!.url).toBe('/search');
+        expect(history[0]!.params).toEqual(searchOptions);
     });
 });

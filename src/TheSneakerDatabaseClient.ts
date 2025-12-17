@@ -1,7 +1,7 @@
-import axios, { AxiosInstance, CreateAxiosDefaults } from 'axios';
+import axios, { type AxiosInstance, type CreateAxiosDefaults } from 'axios';
 import { addAxiosDateTransformer, createAxiosDateTransformer } from 'axios-date-transformer';
 
-import {
+import type {
     GetSneakersOptions,
     GetSneakersResponse,
     MethodResponse,

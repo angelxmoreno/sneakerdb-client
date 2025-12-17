@@ -1,6 +1,6 @@
 export { TheSneakerDatabaseClient } from './TheSneakerDatabaseClient';
 
-export {
+export type {
     GetSneakersOptions,
     GetSneakersResponse,
     MethodResponse,
