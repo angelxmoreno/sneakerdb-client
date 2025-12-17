@@ -1,8 +1,7 @@
 # SneakerDB Client
 
-
-[![Maintainability](https://api.codeclimate.com/v1/badges/b6ea0145e62b94aec72f/maintainability)](https://codeclimate.com/github/angelxmoreno/sneakerdb-client/maintainability)
-[![Test Coverage](https://api.codeclimate.com/v1/badges/b6ea0145e62b94aec72f/test_coverage)](https://codeclimate.com/github/angelxmoreno/sneakerdb-client/test_coverage)
+[![Maintainability](https://qlty.sh/gh/angelxmoreno/projects/sneakerdb-client/maintainability.svg)](https://qlty.sh/gh/angelxmoreno/projects/sneakerdb-client)
+[![Code Coverage](https://qlty.sh/gh/angelxmoreno/projects/sneakerdb-client/coverage.svg)](https://qlty.sh/gh/angelxmoreno/projects/sneakerdb-client)
 [![codecov](https://codecov.io/gh/angelxmoreno/sneakerdb-client/graph/badge.svg?token=vhU44wLf2A)](https://codecov.io/gh/angelxmoreno/sneakerdb-client)
 [![Build on Main](https://github.com/angelxmoreno/sneakerdb-client/actions/workflows/manual-build.yml/badge.svg)](https://github.com/angelxmoreno/sneakerdb-client/actions/workflows/manual-build.yml)
 [![License](https://img.shields.io/github/license/angelxmoreno/sneakerdb-client?label=License)](https://github.com/angelxmoreno/sneakerdb-client/blob/main/LICENSE)
@@ -51,6 +50,11 @@ Release builds run `bun run build`, which cleans `dist/`, bundles `src/index.ts`
 
 - Dependabot runs weekly for npm dependencies and GitHub Actions.
 - Successful Dependabot PRs are auto-merged once "Node.js CI with Codecov" passes, keeping tooling up to date.
+
+### Static analysis & coverage
+
+- Code Climate Quality integrations have been removed ahead of the July 18, 2025 sunset. Configure [Qlty](https://docs.qlty.sh/migration/guide) (via the `qlty` CLI and workspace gates) to restore maintainability/diff coverage checks once your workspace is provisioned.
+- Until Qlty coverage uploads are wired in, Codecov remains the source of truth for coverage signals in CI.
 
 ## API
 There are 4 methods available on the client instance:

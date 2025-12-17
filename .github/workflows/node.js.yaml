@@ -10,31 +10,29 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Set up Node.js and Yarn
-        uses: actions/setup-node@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
         with:
-          node-version: 18
-          registry-url: 'https://registry.npmjs.org'
-          cache: 'npm'
+          bun-version: 1.2.0
 
       - name: Install dependencies
-        run: npm install
+        run: bun install
 
       - name: Run tests and coverage
-        run: npm run test:coverage
+        run: bun run test:coverage
 
       - name: Run build
-        run: npm run build
+        run: bun run build
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
 
-      - name: Upload coverage to CodeClimate
-        uses: paambaati/codeclimate-action@v5.0.0
-        env:
-          CC_TEST_REPORTER_ID: ${{ secrets.CODE_CLIMATE_ID }}
-
+      - name: Upload coverage to Qlty
+        uses: qltysh/qlty-action/coverage@v2
+        with:
+          token: ${{ secrets.QLTY_COVERAGE_TOKEN }}
+          files: coverage/lcov.info
