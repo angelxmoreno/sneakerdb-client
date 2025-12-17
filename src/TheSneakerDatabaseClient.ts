@@ -1,6 +1,7 @@
 import type Keyv from '@keyvhq/core';
 import axios, { type AxiosInstance, type CreateAxiosDefaults } from 'axios';
 import { addAxiosDateTransformer, createAxiosDateTransformer } from 'axios-date-transformer';
+import objectHash from 'object-hash';
 import type {
     ApiListResponse,
     CacheOptions,
@@ -58,7 +59,7 @@ export class TheSneakerDatabaseClient {
             return uri;
         }
 
-        return `${uri}${JSON.stringify(params)}`;
+        return `${uri}:${objectHash(params)}`;
     }
     protected async handleRequest<T, K = undefined>(uri: string, params?: K): Promise<MethodResponse<T>> {
         try {
