@@ -24,11 +24,13 @@ npm install sneakerdb-client
 const { TheSneakerDatabaseClient } = require('sneakerdb-client');
 
 // Create a client instance with your API key
-const client = new TheSneakerDatabaseClient('your-api-key');
+const client = new TheSneakerDatabaseClient({ rapidApiKey: 'your-api-key' });
 
 // Example: Get sneakers
-client.getSneakers({ limit: 5 }).then(response => {
-  console.log(response);
+client.getSneakers({ limit: 5 }).then(result => {
+  if (result.success) {
+    console.log(result.response);
+  }
 });
 ```
 
