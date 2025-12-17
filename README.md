@@ -38,10 +38,14 @@ client.getSneakers({ limit: 5 }).then(response => {
 Run local tooling with [Bun](https://bun.sh/):
 
 ```bash
-bun run build   # compile TypeScript to dist/
-bun test        # execute Bun:test
+bun run build        # bun build + tsc --emitDeclarationOnly
+bun lint             # Biome lint
+bun lint:fix         # auto-fix with Biome
+bun test             # Bun:test runner
 bun test --coverage
 ```
+
+Release builds run `bun run build`, which cleans `dist/`, bundles `src/index.ts` with `bun build`, and emits type declarations via `tsc --emitDeclarationOnly`.
 
 ## API
 There are 4 methods available on the client instance:
