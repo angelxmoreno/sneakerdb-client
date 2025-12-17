@@ -42,6 +42,8 @@ bun lint             # Biome lint
 bun lint:fix         # auto-fix with Biome
 bun test             # Bun:test runner
 bun test --coverage
+# Run live RapidAPI checks (requires RAPID_API_KEY and RUN_E2E=true)
+RUN_E2E=true RAPID_API_KEY=... bun test src/TheSneakerDatabaseClient.e2e.test.ts
 ```
 
 Release builds run `bun run build`, which cleans `dist/`, bundles `src/index.ts` with `bun build`, and emits type declarations via `tsc --emitDeclarationOnly`.

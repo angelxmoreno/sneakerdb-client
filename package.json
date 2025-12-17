@@ -47,7 +47,7 @@
         "test": "bun test",
         "test:coverage": "bun test --coverage --coverage-reporter=lcov",
         "release": "release-it --only-version",
-        "check-types": "tsc --noEmit",
+        "check-types": "tsc --noEmit -p tsconfig.tests.json",
         "prepare": "lefthook install",
         "lint": "biome check .",
         "lint:fix": "biome check --write ."

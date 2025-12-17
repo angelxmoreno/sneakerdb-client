@@ -60,3 +60,5 @@ export interface SearchResponse {
     totalPages: number;
     results: Sneaker[];
 }
+
+export type ApiListResponse<T> = { results?: T[]; data?: T[] } | T[];

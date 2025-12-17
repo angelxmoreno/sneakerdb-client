@@ -1,17 +1,23 @@
-import { AxiosError } from 'axios';
-
+import { describe, expect, it } from 'bun:test';
+import { AxiosError, AxiosHeaders, type AxiosResponse } from 'axios';
 import { handleAxiosError } from './utils';
 
 describe('handleAxiosError', () => {
     it('returns response data for Axios errors', () => {
         const response = {
-            data: { message: 'Request failed' },
+            data: { name: 'Error', message: 'Request failed' },
             status: 400,
             statusText: 'Bad Request',
-            headers: {},
-            config: {},
-        };
-        const axiosError = new AxiosError('Request failed', 'ERR_BAD_REQUEST', {}, {}, response);
+            headers: new AxiosHeaders(),
+            config: { headers: new AxiosHeaders() },
+        } satisfies AxiosResponse<{ name: string; message: string }>;
+        const axiosError = new AxiosError(
+            'Request failed',
+            'ERR_BAD_REQUEST',
+            { headers: new AxiosHeaders() },
+            {},
+            response
+        );
 
         const handled = handleAxiosError(axiosError);
 
