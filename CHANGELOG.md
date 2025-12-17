@@ -1,3 +1,13 @@
+# [2.0.0](https://github.com/angelxmoreno/sneakerdb-client/compare/1.2.0...2.0.0) (2025-12-17)
+
+### Features
+- Integrated caching for API responses ([ef70c13](https://github.com/angelxmoreno/sneakerdb-client/commit/ef70c134717bd62ee1b1d9630f22d399ddb91288))
+- Added an optional cache parameter to `TheSneakerDatabaseClient` constructor ([ff772ae](https://github.com/angelxmoreno/sneakerdb-client/commit/ff772ae2d2e937b977f4f18a361560f97351ab48))
+- Updated constructor to accept a typed options object for future extensibility ([9260900](https://github.com/angelxmoreno/sneakerdb-client/commit/9260900ef2e0f86f90a25bbfdf80f476d0fc56d0))
+
+### Breaking Changes
+- `TheSneakerDatabaseClient` constructor now takes a single options object instead of positional arguments ([9260900](https://github.com/angelxmoreno/sneakerdb-client/commit/9260900ef2e0f86f90a25bbfdf80f476d0fc56d0))
+
 # [1.2.0](https://github.com/angelxmoreno/sneakerdb-client/compare/1.1.0...1.2.0) (2025-12-17)
 
 
