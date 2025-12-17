@@ -1,3 +1,10 @@
+# [2.1.0](https://github.com/angelxmoreno/sneakerdb-client/compare/2.0.0...2.1.0) (2025-12-17)
+
+
+### Features
+
+* migrating to release-please with auto-merging ([d7f104f](https://github.com/angelxmoreno/sneakerdb-client/commit/d7f104f4374161417ca32f1b6f7a463b3224dc74))
+
 # [2.0.0](https://github.com/angelxmoreno/sneakerdb-client/compare/1.2.0...2.0.0) (2025-12-17)
 
 ### Features
