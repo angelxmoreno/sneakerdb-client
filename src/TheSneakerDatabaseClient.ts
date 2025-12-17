@@ -1,6 +1,5 @@
 import axios, { type AxiosInstance, type CreateAxiosDefaults } from 'axios';
 import { addAxiosDateTransformer, createAxiosDateTransformer } from 'axios-date-transformer';
-
 import type {
     ApiListResponse,
     GetSneakersOptions,
@@ -9,13 +8,14 @@ import type {
     SearchOptions,
     SearchResponse,
     Sneaker,
+    TheSneakerDatabaseClientOptions,
 } from './interfaces';
 import { handleAxiosError } from './utils';
 
 export class TheSneakerDatabaseClient {
     readonly client: AxiosInstance;
 
-    constructor(rapidApiKey: string, axiosParam?: AxiosInstance | CreateAxiosDefaults) {
+    constructor({ rapidApiKey, axiosParam }: TheSneakerDatabaseClientOptions) {
         this.client = this.configureAxiosInstance(rapidApiKey, axiosParam);
     }
 

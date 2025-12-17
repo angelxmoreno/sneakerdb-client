@@ -44,7 +44,7 @@ describe('TheSneakerDatabaseClient', () => {
     };
 
     beforeEach(() => {
-        theSneakerDBClient = new TheSneakerDatabaseClient('your-api-key');
+        theSneakerDBClient = new TheSneakerDatabaseClient({ rapidApiKey: 'your-api-key' });
         mockAxios = new MockAdapter(theSneakerDBClient.client);
     });
 

@@ -1,3 +1,6 @@
+import type * as Keyv from '@keyvhq/core';
+import type { AxiosInstance, CreateAxiosDefaults } from 'axios';
+
 export interface Image {
     original: string;
     small: string;
@@ -62,3 +65,9 @@ export interface SearchResponse {
 }
 
 export type ApiListResponse<T> = { results?: T[]; data?: T[] } | T[];
+
+export type TheSneakerDatabaseClientOptions = {
+    rapidApiKey: string;
+    axiosParam?: AxiosInstance | CreateAxiosDefaults;
+    cache?: Keyv;
+};
