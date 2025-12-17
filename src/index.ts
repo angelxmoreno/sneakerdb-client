@@ -1,8 +1,9 @@
 export type {
-    BaseOptions,
+    CacheOptions,
     GetSneakersOptions,
     GetSneakersResponse,
     MethodResponse,
+    PaginatedOptions,
     SearchOptions,
     SearchResponse,
     Sneaker,

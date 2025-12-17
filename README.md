@@ -27,8 +27,10 @@ const { TheSneakerDatabaseClient } = require('sneakerdb-client');
 const client = new TheSneakerDatabaseClient({ rapidApiKey: 'your-api-key' });
 
 // Example: Get sneakers
-client.getSneakers({ limit: 5 }).then(response => {
-  console.log(response);
+client.getSneakers({ limit: 5 }).then(result => {
+  if (result.success) {
+    console.log(result.response);
+  }
 });
 ```
 

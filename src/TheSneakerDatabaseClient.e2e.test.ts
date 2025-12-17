@@ -12,8 +12,10 @@ let client: TheSneakerDatabaseClient;
 let cache: Keyv;
 
 const expectSuccessful = <T>(result: MethodResponse<T>): NonNullableResponse<T> => {
-    expect(result.error).toBeUndefined();
-    expect(result.response).toBeDefined();
+    expect(result.success).toBe(true);
+    if (!result.success) {
+        throw new Error('Expected request to succeed');
+    }
     return result.response as NonNullableResponse<T>;
 };
 
@@ -110,6 +112,10 @@ if (!shouldRunE2E) {
 
                 try {
                     const bypass = await client.getSneakers({ ...options, skipCache: true });
+                    expect(bypass.success).toBe(false);
+                    if (bypass.success) {
+                        throw new Error('Expected cache bypass to fail without network');
+                    }
                     expect(bypass.error).toBeInstanceOf(Error);
                 } finally {
                     client.client.get = originalGet;

@@ -3,7 +3,7 @@ import axios, { type AxiosInstance, type CreateAxiosDefaults } from 'axios';
 import { addAxiosDateTransformer, createAxiosDateTransformer } from 'axios-date-transformer';
 import type {
     ApiListResponse,
-    BaseOptions,
+    CacheOptions,
     GetSneakersOptions,
     GetSneakersResponse,
     MethodResponse,
@@ -45,11 +45,11 @@ export class TheSneakerDatabaseClient {
             return { cacheOptions: {}, requestParams: undefined };
         }
 
-        const { ttl, skipCache, ...rest } = params as K & BaseOptions & Record<string, unknown>;
+        const { ttl, skipCache, ...rest } = params as K & CacheOptions & Record<string, unknown>;
         const hasParams = Object.keys(rest).length > 0;
         return {
             cacheOptions: { ttl, skipCache },
-            requestParams: hasParams ? (rest as Omit<K, keyof BaseOptions>) : undefined,
+            requestParams: hasParams ? (rest as Omit<K, keyof CacheOptions>) : undefined,
         };
     }
 
@@ -69,7 +69,7 @@ export class TheSneakerDatabaseClient {
             if (shouldUseCache && this.cache) {
                 const cached = await this.cache.get(cacheKey);
                 if (typeof cached !== 'undefined') {
-                    return { response: cached };
+                    return { success: true, response: cached as T };
                 }
             }
 
@@ -79,9 +79,9 @@ export class TheSneakerDatabaseClient {
                 await this.cache.set(cacheKey, data, cacheOptions.ttl);
             }
 
-            return { response: data };
+            return { success: true, response: data };
         } catch (error) {
-            return { error: handleAxiosError(error) };
+            return { success: false, error: handleAxiosError(error) };
         }
     }
 
@@ -89,15 +89,11 @@ export class TheSneakerDatabaseClient {
         result: MethodResponse<TInput>,
         mapper: (value: TInput) => TOutput
     ): MethodResponse<TOutput> {
-        if (result.error) {
-            return { error: result.error };
+        if (!result.success) {
+            return result;
         }
 
-        if (typeof result.response === 'undefined') {
-            return {};
-        }
-
-        return { response: mapper(result.response) };
+        return { success: true, response: mapper(result.response) };
     }
 
     protected normalizeList<T>(payload: ApiListResponse<T>): T[] {
@@ -116,8 +112,8 @@ export class TheSneakerDatabaseClient {
         return [];
     }
 
-    protected async requestList<T>(uri: string, options?: BaseOptions): Promise<MethodResponse<T[]>> {
-        const result = await this.handleRequest<ApiListResponse<T>, BaseOptions>(uri, options);
+    protected async requestList<T>(uri: string, options?: CacheOptions): Promise<MethodResponse<T[]>> {
+        const result = await this.handleRequest<ApiListResponse<T>, CacheOptions>(uri, options);
         return this.mapResponse(result, (payload) => this.normalizeList(payload));
     }
 
@@ -125,19 +121,19 @@ export class TheSneakerDatabaseClient {
         return this.handleRequest<GetSneakersResponse, GetSneakersOptions>('/sneakers', options);
     }
 
-    async getSneakerById(sneakerId: string, options?: BaseOptions): Promise<MethodResponse<Sneaker[]>> {
-        const result = await this.handleRequest<ApiListResponse<Sneaker>, BaseOptions>(
+    async getSneakerById(sneakerId: string, options?: CacheOptions): Promise<MethodResponse<Sneaker[]>> {
+        const result = await this.handleRequest<ApiListResponse<Sneaker>, CacheOptions>(
             `/sneakers/${sneakerId}`,
             options
         );
         return this.mapResponse(result, (payload) => this.normalizeList(payload));
     }
 
-    getBrands(options?: BaseOptions): Promise<MethodResponse<string[]>> {
+    getBrands(options?: CacheOptions): Promise<MethodResponse<string[]>> {
         return this.requestList<string>(`/brands`, options);
     }
 
-    getGenders(options?: BaseOptions): Promise<MethodResponse<string[]>> {
+    getGenders(options?: CacheOptions): Promise<MethodResponse<string[]>> {
         return this.requestList<string>(`/genders`, options);
     }
 

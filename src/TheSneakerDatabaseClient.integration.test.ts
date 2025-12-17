@@ -75,8 +75,11 @@ describe('TheSneakerDatabaseClient', () => {
         mockAxios.onGet('/sneakers', { params: options }).reply(200, responseObj);
         const response = await theSneakerDBClient.getSneakers(options);
 
-        expect(response.error).toBeUndefined();
-        expect(response.response).toBeDefined();
+        expect(response.success).toBe(true);
+        if (!response.success) {
+            throw new Error('Expected request to succeed');
+        }
+        expect(response.response).toEqual(responseObj);
         const request = expectSingleHistoryRequest();
         expect(request.url).toBe('/sneakers');
         expect(request.params).toEqual(options);
@@ -85,8 +88,11 @@ describe('TheSneakerDatabaseClient', () => {
     it('should handle getSneakers request with an error', async () => {
         mockAxios.onGet('/sneakers', { params: { limit: 5 } }).reply(500, 'Internal Server Error');
         const response = await theSneakerDBClient.getSneakers({ limit: 5 });
-        expect(response.response).toBeUndefined();
-        expect(response.error).toBeDefined();
+        expect(response.success).toBe(false);
+        if (response.success) {
+            throw new Error('Expected request to fail');
+        }
+        expect(response.error).toBeTruthy();
     });
 
     it('should handle getSneakerById request', async () => {
@@ -95,8 +101,10 @@ describe('TheSneakerDatabaseClient', () => {
         mockAxios.onGet(`/sneakers/${sneakerId}`).reply(200, responseObj);
         const response = await theSneakerDBClient.getSneakerById(sneakerId);
 
-        expect(response.error).toBeUndefined();
-        expect(response.response).toBeDefined();
+        expect(response.success).toBe(true);
+        if (!response.success) {
+            throw new Error('Expected request to succeed');
+        }
         expect(response.response).toEqual(responseObj);
         const request = expectSingleHistoryRequest();
         expect(request.url).toBe(`/sneakers/${sneakerId}`);
@@ -107,8 +115,11 @@ describe('TheSneakerDatabaseClient', () => {
         mockAxios.onGet(`/sneakers/${sneakerId}`).reply(404, 'Not Found');
         const response = await theSneakerDBClient.getSneakerById(sneakerId);
 
-        expect(response.response).toBeUndefined();
-        expect(response.error).toBeDefined();
+        expect(response.success).toBe(false);
+        if (response.success) {
+            throw new Error('Expected request to fail');
+        }
+        expect(response.error).toBeTruthy();
         const request = expectSingleHistoryRequest();
         expect(request.url).toBe(`/sneakers/${sneakerId}`);
     });
@@ -127,8 +138,10 @@ describe('TheSneakerDatabaseClient', () => {
         mockAxios.onGet('/search', { params: searchOptions }).reply(200, responseObj);
         const response = await theSneakerDBClient.search(searchOptions);
 
-        expect(response.error).toBeUndefined();
-        expect(response.response).toBeDefined();
+        expect(response.success).toBe(true);
+        if (!response.success) {
+            throw new Error('Expected request to succeed');
+        }
         expect(response.response).toEqual(responseObj);
         const request = expectSingleHistoryRequest();
         expect(request.url).toBe('/search');
@@ -143,8 +156,11 @@ describe('TheSneakerDatabaseClient', () => {
         mockAxios.onGet('/search', { params: searchOptions }).reply(404, 'Not Found');
         const response = await theSneakerDBClient.search(searchOptions);
 
-        expect(response.response).toBeUndefined();
-        expect(response.error).toBeDefined();
+        expect(response.success).toBe(false);
+        if (response.success) {
+            throw new Error('Expected request to fail');
+        }
+        expect(response.error).toBeTruthy();
         const request = expectSingleHistoryRequest();
         expect(request.url).toBe('/search');
         expect(request.params).toEqual(searchOptions);
@@ -156,7 +172,10 @@ describe('TheSneakerDatabaseClient', () => {
 
         const response = await theSneakerDBClient.getBrands();
 
-        expect(response.error).toBeUndefined();
+        expect(response.success).toBe(true);
+        if (!response.success) {
+            throw new Error('Expected request to succeed');
+        }
         expect(response.response).toEqual(brands);
         const request = expectSingleHistoryRequest();
         expect(request.url).toBe('/brands');
@@ -167,8 +186,11 @@ describe('TheSneakerDatabaseClient', () => {
 
         const response = await theSneakerDBClient.getBrands();
 
-        expect(response.response).toBeUndefined();
-        expect(response.error).toBeDefined();
+        expect(response.success).toBe(false);
+        if (response.success) {
+            throw new Error('Expected request to fail');
+        }
+        expect(response.error).toBeTruthy();
         const request = expectSingleHistoryRequest();
         expect(request.url).toBe('/brands');
     });
@@ -179,12 +201,20 @@ describe('TheSneakerDatabaseClient', () => {
         mockAxios.onGet('/sneakers', { params: options }).reply(200, payload);
 
         const first = await theSneakerDBClient.getSneakers(options);
+        expect(first.success).toBe(true);
+        if (!first.success) {
+            throw new Error('Expected cache warm-up to succeed');
+        }
         expect(first.response).toEqual(payload);
         expect(getHistoryRequests()).toHaveLength(1);
 
         const cached = await theSneakerDBClient.getSneakers(options);
-        expect(cached.response?.count).toBe(payload.count);
-        expect(cached.response?.results[0]?.id).toBe(sneakerData.id);
+        expect(cached.success).toBe(true);
+        if (!cached.success) {
+            throw new Error('Expected cached response to succeed');
+        }
+        expect(cached.response.count).toBe(payload.count);
+        expect(cached.response.results[0]?.id).toBe(sneakerData.id);
         expect(getHistoryRequests()).toHaveLength(1);
     });
 
@@ -202,6 +232,10 @@ describe('TheSneakerDatabaseClient', () => {
         expect(getHistoryRequests()).toHaveLength(1);
 
         const bypass = await theSneakerDBClient.getSneakers({ ...options, skipCache: true });
+        expect(bypass.success).toBe(true);
+        if (!bypass.success) {
+            throw new Error('Expected bypass response to succeed');
+        }
         expect(bypass.response).toEqual(fresh);
         expect(getHistoryRequests()).toHaveLength(2);
     });

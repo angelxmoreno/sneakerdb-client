@@ -1,4 +1,4 @@
-import type * as Keyv from '@keyvhq/core';
+import type Keyv from '@keyvhq/core';
 import type { AxiosInstance, CreateAxiosDefaults } from 'axios';
 
 export interface Image {
@@ -23,7 +23,7 @@ export interface Sneaker {
     gender: string;
     silhouette: string;
     retailPrice: number;
-    releaseDate: Date;
+    releaseDate: Date | string;
     releaseYear: number;
     estimatedMarketValue: number;
     links: Links;
@@ -31,14 +31,19 @@ export interface Sneaker {
     story: string;
 }
 
-export type MethodResponse<T> = { error?: Error; response?: T };
+export type MethodResponse<T> = { success: true; response: T } | { success: false; error?: Error };
 
-export interface BaseOptions {
+export interface CacheOptions {
     ttl?: number;
     skipCache?: boolean;
 }
 
-export interface GetSneakersOptions extends BaseOptions {
+export interface PaginatedOptions extends CacheOptions {
+    limit?: number;
+    page?: number;
+}
+
+export interface GetSneakersOptions extends PaginatedOptions {
     limit: number;
     gender?: string;
     silhouette?: string;
@@ -57,9 +62,8 @@ export interface GetSneakersResponse {
     results: Sneaker[];
 }
 
-export interface SearchOptions extends BaseOptions {
+export interface SearchOptions extends PaginatedOptions {
     limit: number;
-    page?: number;
     query?: string;
 }
 
