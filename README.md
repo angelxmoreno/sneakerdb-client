@@ -47,6 +47,11 @@ bun test --coverage
 
 Release builds run `bun run build`, which cleans `dist/`, bundles `src/index.ts` with `bun build`, and emits type declarations via `tsc --emitDeclarationOnly`.
 
+### Automated maintenance
+
+- Dependabot runs weekly for npm dependencies and GitHub Actions.
+- Successful Dependabot PRs are auto-merged once "Node.js CI with Codecov" passes, keeping tooling up to date.
+
 ## API
 There are 4 methods available on the client instance:
 - getSneakers: gets a list of sneakers based on the provided options.
