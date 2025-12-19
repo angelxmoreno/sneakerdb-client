@@ -1,7 +1,15 @@
 import { beforeAll, beforeEach, describe, expect, it } from 'bun:test';
 import Keyv from '@keyvhq/core';
+import type { AxiosError } from 'axios';
 
-import type { GetSneakersResponse, MethodResponse, SearchResponse, Sneaker, SortOption } from './interfaces';
+import type {
+    GetSneakersOptions,
+    GetSneakersResponse,
+    MethodResponse,
+    SearchResponse,
+    Sneaker,
+    SortOption,
+} from './interfaces';
 import { TheSneakerDatabaseClient } from './TheSneakerDatabaseClient';
 
 type NonNullableResponse<T> = Exclude<T, undefined>;
@@ -61,6 +69,43 @@ if (!shouldRunE2E) {
                     expectSuccessful<GetSneakersResponse>(result, () => `${field} is not valid for sorting`);
                 });
             }
+
+            it('guards against passing multiple filters to the client', async () => {
+                const options = {
+                    limit: 10,
+                    filters: [
+                        { field: 'releaseYear', operator: 'gte', value: 2000 },
+                        { field: 'releaseYear', operator: 'lte', value: new Date().getFullYear() },
+                    ],
+                } as unknown as GetSneakersOptions;
+
+                const result = await client.getSneakers(options);
+                expect(result.success).toBe(false);
+                if (result.success) {
+                    throw new Error('Expected guard rails to reject multiple filters');
+                }
+                expect(result.error).toBeInstanceOf(Error);
+                expect(result.error?.message).toMatch(/(single|exactly one filter)/i);
+            });
+
+            it('rejects multiple filters at the API level', async () => {
+                const currentYear = new Date().getFullYear();
+                const filtersParam = `releaseYear=gte:2000,releaseYear=lte:${currentYear}`;
+                let caught: AxiosError<{ message?: string }> | undefined;
+
+                try {
+                    await client.client.get<GetSneakersResponse>('/sneakers', {
+                        params: { limit: 10, filters: filtersParam },
+                    });
+                    throw new Error('Expected RapidAPI to reject combined filters');
+                } catch (error) {
+                    caught = error as AxiosError<{ message?: string }>;
+                }
+
+                expect(caught).toBeDefined();
+                expect(caught?.response?.status).toBeGreaterThanOrEqual(400);
+                expect(caught?.response?.data?.message).toMatch(/invalid query parameter filters/i);
+            });
         });
 
         describe('->getSneakerById()', () => {

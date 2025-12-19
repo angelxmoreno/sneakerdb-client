@@ -27,7 +27,7 @@ const { TheSneakerDatabaseClient } = require('sneakerdb-client');
 const client = new TheSneakerDatabaseClient({ rapidApiKey: 'your-api-key' });
 
 // Example: Get sneakers
-client.getSneakers({ limit: 5 }).then(result => {
+client.getSneakers({ limit: 15 }).then(result => {
   if (result.success) {
     console.log(result.response);
   }
@@ -36,13 +36,17 @@ client.getSneakers({ limit: 5 }).then(result => {
 // Example: Filter and sort
 client.getSneakers({
   brand: 'Jordan',
-  releaseYear: 'gte:2019',
+  filters: { field: 'releaseYear', operator: 'gte', value: 2019 }, // filterable fields: releaseDate, releaseYear, retailPrice, estimatedMarketValue
   sort: { field: 'retailPrice', order: 'desc' }, // allowed fields: name, silhouette, retailPrice, releaseDate, releaseYear
 }).then(result => {
   if (result.success) {
     console.log(result.response);
   }
 });
+
+// Note: The Sneaker Database API currently accepts a single filter expression per request.
+// Supported filter fields: releaseDate, releaseYear, retailPrice, estimatedMarketValue.
+// Passing multiple filters or unsupported fields will cause the client (or API) to throw an "Invalid query parameter filters" error.
 ```
 
 ## Development

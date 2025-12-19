@@ -5,6 +5,10 @@ import objectHash from 'object-hash';
 import type {
     ApiListResponse,
     CacheOptions,
+    ComparableField,
+    FilterOperator,
+    FilterOption,
+    FilterValue,
     GetSneakersOptions,
     GetSneakersResponse,
     MethodResponse,
@@ -15,7 +19,12 @@ import type {
     SortOrder,
     TheSneakerDatabaseClientOptions,
 } from './interfaces';
+import { FILTERABLE_FIELDS } from './interfaces';
 import { handleAxiosError } from './utils';
+
+const FILTERABLE_FIELD_SET = new Set<ComparableField>(FILTERABLE_FIELDS);
+const FILTER_OPERATORS = ['lt', 'lte', 'gt', 'gte', 'eq'] as const;
+const FILTER_OPERATOR_SET = new Set<FilterOperator>(FILTER_OPERATORS);
 
 export class TheSneakerDatabaseClient {
     readonly client: AxiosInstance;
@@ -137,6 +146,16 @@ export class TheSneakerDatabaseClient {
             delete normalized.sort;
         }
 
+        if (typeof normalized.filters !== 'undefined') {
+            const filter = this.ensureSingleFilter(normalized.filters);
+            normalized.filters = this.serializeFilter(filter);
+            if (typeof normalized.filters === 'undefined') {
+                delete normalized.filters;
+            }
+        } else {
+            delete normalized.filters;
+        }
+
         return normalized;
     }
 
@@ -148,6 +167,61 @@ export class TheSneakerDatabaseClient {
 
         const direction: SortOrder = order ?? 'desc';
         return `${field}:${direction}`;
+    }
+
+    protected ensureSingleFilter(input: unknown): FilterOption | undefined {
+        if (typeof input === 'undefined') {
+            return undefined;
+        }
+
+        if (Array.isArray(input)) {
+            throw new Error('filters accepts exactly one filter object per request.');
+        }
+
+        if (!input || typeof input !== 'object') {
+            throw new Error('filters must be an object with field, operator, and value.');
+        }
+
+        const candidate = input as FilterOption;
+
+        if (!candidate.field) {
+            throw new Error('filters.field is required when filters is provided.');
+        }
+
+        if (!FILTERABLE_FIELD_SET.has(candidate.field as ComparableField)) {
+            throw new Error(
+                `Field ${String(candidate.field)} is not filterable. Allowed fields: ${FILTERABLE_FIELDS.join(', ')}.`
+            );
+        }
+
+        if (typeof candidate.value === 'undefined' || candidate.value === null) {
+            throw new Error('filters.value is required when filters is provided.');
+        }
+
+        if (typeof candidate.operator !== 'undefined' && !FILTER_OPERATOR_SET.has(candidate.operator)) {
+            throw new Error(
+                `Operator ${String(candidate.operator)} is invalid. Allowed operators: ${FILTER_OPERATORS.join(', ')}.`
+            );
+        }
+
+        return candidate;
+    }
+
+    protected serializeFilter(filter?: FilterOption) {
+        if (!filter?.field) {
+            return undefined;
+        }
+
+        const operator: FilterOperator = filter.operator ?? 'eq';
+        const value = this.serializeFilterValue(filter.value);
+        return `${filter.field}=${operator}:${value}`;
+    }
+
+    protected serializeFilterValue(value: FilterValue) {
+        if (value instanceof Date) {
+            return value.toISOString().split('T')[0];
+        }
+        return String(value);
     }
 
     getSneakers(options: GetSneakersOptions): Promise<MethodResponse<GetSneakersResponse>> {
