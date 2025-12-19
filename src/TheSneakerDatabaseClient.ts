@@ -11,6 +11,8 @@ import type {
     SearchOptions,
     SearchResponse,
     Sneaker,
+    SortOption,
+    SortOrder,
     TheSneakerDatabaseClientOptions,
 } from './interfaces';
 import { handleAxiosError } from './utils';
@@ -64,7 +66,8 @@ export class TheSneakerDatabaseClient {
     protected async handleRequest<T, K = undefined>(uri: string, params?: K): Promise<MethodResponse<T>> {
         try {
             const { requestParams, cacheOptions } = this.partitionOptions(params);
-            const cacheKey = this.createCacheKey(uri, requestParams);
+            const queryParams = this.prepareQueryParams(requestParams);
+            const cacheKey = this.createCacheKey(uri, queryParams);
             const shouldUseCache = Boolean(this.cache && !cacheOptions.skipCache);
 
             if (shouldUseCache && this.cache) {
@@ -74,7 +77,7 @@ export class TheSneakerDatabaseClient {
                 }
             }
 
-            const { data } = await this.client.get<T>(uri, { params: requestParams });
+            const { data } = await this.client.get<T>(uri, { params: queryParams });
 
             if (shouldUseCache && this.cache) {
                 await this.cache.set(cacheKey, data, cacheOptions.ttl);
@@ -116,6 +119,35 @@ export class TheSneakerDatabaseClient {
     protected async requestList<T>(uri: string, options?: CacheOptions): Promise<MethodResponse<T[]>> {
         const result = await this.handleRequest<ApiListResponse<T>, CacheOptions>(uri, options);
         return this.mapResponse(result, (payload) => this.normalizeList(payload));
+    }
+
+    protected prepareQueryParams(params?: Record<string, unknown>) {
+        if (!params) {
+            return undefined;
+        }
+
+        const normalized: Record<string, unknown> = { ...params };
+
+        if (typeof normalized.sort !== 'undefined') {
+            normalized.sort = this.serializeSortOption(normalized.sort as SortOption);
+            if (typeof normalized.sort === 'undefined') {
+                delete normalized.sort;
+            }
+        } else {
+            delete normalized.sort;
+        }
+
+        return normalized;
+    }
+
+    protected serializeSortOption(option: SortOption) {
+        const { field, order } = option;
+        if (!field) {
+            return undefined;
+        }
+
+        const direction: SortOrder = order ?? 'desc';
+        return `${field}:${direction}`;
     }
 
     getSneakers(options: GetSneakersOptions): Promise<MethodResponse<GetSneakersResponse>> {

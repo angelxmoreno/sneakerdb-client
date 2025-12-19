@@ -32,6 +32,17 @@ client.getSneakers({ limit: 5 }).then(result => {
     console.log(result.response);
   }
 });
+
+// Example: Filter and sort
+client.getSneakers({
+  brand: 'Jordan',
+  releaseYear: 'gte:2019',
+  sort: { field: 'retailPrice', order: 'desc' }, // allowed fields: name, silhouette, retailPrice, releaseDate, releaseYear
+}).then(result => {
+  if (result.success) {
+    console.log(result.response);
+  }
+});
 ```
 
 ## Development

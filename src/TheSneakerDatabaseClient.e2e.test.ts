@@ -1,7 +1,7 @@
-import { beforeAll, describe, expect, it } from 'bun:test';
+import { beforeAll, beforeEach, describe, expect, it } from 'bun:test';
 import Keyv from '@keyvhq/core';
 
-import type { GetSneakersResponse, MethodResponse, SearchResponse, Sneaker } from './interfaces';
+import type { GetSneakersResponse, MethodResponse, SearchResponse, Sneaker, SortOption } from './interfaces';
 import { TheSneakerDatabaseClient } from './TheSneakerDatabaseClient';
 
 type NonNullableResponse<T> = Exclude<T, undefined>;
@@ -11,11 +11,13 @@ const shouldRunE2E = Boolean(rapidApiKey && Bun.env.RUN_E2E === 'true');
 let client: TheSneakerDatabaseClient;
 let cache: Keyv;
 
-const expectSuccessful = <T>(result: MethodResponse<T>): NonNullableResponse<T> => {
-    expect(result.success).toBe(true);
+const expectSuccessful = <T>(result: MethodResponse<T>, exceptionMessage?: () => string): NonNullableResponse<T> => {
     if (!result.success) {
-        throw new Error('Expected request to succeed');
+        const errorMessage = exceptionMessage ? exceptionMessage() : 'Expected request to succeed';
+        console.error(errorMessage);
+        throw new Error(errorMessage);
     }
+    expect(result.success).toBe(true);
     return result.response as NonNullableResponse<T>;
 };
 
@@ -27,7 +29,9 @@ if (!shouldRunE2E) {
             cache = new Keyv();
             client = new TheSneakerDatabaseClient({ rapidApiKey: rapidApiKey ?? '', cache });
         });
-
+        beforeEach(async () => {
+            await Bun.sleep(1500);
+        });
         describe('->getSneakers()', () => {
             it('returns paginated sneaker data', async () => {
                 const options = { limit: 10 };
@@ -38,6 +42,25 @@ if (!shouldRunE2E) {
                 expect(payload.results.length).toBeGreaterThan(0);
                 expect(payload.results[0]).toHaveProperty('id');
             });
+
+            const sortableFields: SortOption['field'][] = [
+                'name',
+                'silhouette',
+                'retailPrice',
+                'releaseDate',
+                'releaseYear',
+            ];
+
+            for (const field of sortableFields) {
+                it(`supports sorting by ${field}`, async () => {
+                    const result = await client.getSneakers({
+                        limit: 10,
+                        brand: 'Jordan',
+                        sort: { field, order: 'desc' },
+                    });
+                    expectSuccessful<GetSneakersResponse>(result, () => `${field} is not valid for sorting`);
+                });
+            }
         });
 
         describe('->getSneakerById()', () => {

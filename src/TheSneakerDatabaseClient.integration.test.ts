@@ -65,14 +65,15 @@ describe('TheSneakerDatabaseClient', () => {
             releaseDate: '2024-08-21',
             sku: 'CZ0858-102',
             releaseYear: '2024',
-            sort: 'release_date',
+            sort: { field: 'releaseDate', order: 'desc' },
             silhouette: 'Air Jordan 1',
         };
         const responseObj: GetSneakersResponse = {
             count: 1,
             results: [sneakerData],
         };
-        mockAxios.onGet('/sneakers', { params: options }).reply(200, responseObj);
+        const expectedParams = { ...options, sort: 'releaseDate:desc' };
+        mockAxios.onGet('/sneakers', { params: expectedParams }).reply(200, responseObj);
         const response = await theSneakerDBClient.getSneakers(options);
 
         expect(response.success).toBe(true);
@@ -82,7 +83,7 @@ describe('TheSneakerDatabaseClient', () => {
         expect(response.response).toEqual(responseObj);
         const request = expectSingleHistoryRequest();
         expect(request.url).toBe('/sneakers');
-        expect(request.params).toEqual(options);
+        expect(request.params).toEqual(expectedParams);
     });
 
     it('should handle getSneakers request with an error', async () => {
@@ -216,6 +217,20 @@ describe('TheSneakerDatabaseClient', () => {
         expect(cached.response.count).toBe(payload.count);
         expect(cached.response.results[0]?.id).toBe(sneakerData.id);
         expect(getHistoryRequests()).toHaveLength(1);
+    });
+
+    it('serializes sort options into API format', async () => {
+        const options: GetSneakersOptions = {
+            limit: 5,
+            sort: { field: 'retailPrice', order: 'asc' },
+        };
+        const payload: GetSneakersResponse = { count: 0, results: [] };
+        mockAxios.onGet('/sneakers', { params: { limit: 5, sort: 'retailPrice:asc' } }).reply(200, payload);
+
+        const response = await theSneakerDBClient.getSneakers(options);
+        expect(response.success).toBe(true);
+        const request = expectSingleHistoryRequest();
+        expect(request.params?.sort).toBe('retailPrice:asc');
     });
 
     it('respects skipCache flag', async () => {

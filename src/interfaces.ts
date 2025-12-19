@@ -38,9 +38,19 @@ export interface CacheOptions {
     skipCache?: boolean;
 }
 
+export type SortOrder = 'asc' | 'desc';
+
+export type SortField = 'name' | 'silhouette' | 'retailPrice' | 'releaseDate' | 'releaseYear';
+
+export interface SortOption {
+    field: SortField;
+    order?: SortOrder;
+}
+
 export interface PaginatedOptions extends CacheOptions {
     limit?: number;
     page?: number;
+    sort?: SortOption;
 }
 
 export interface GetSneakersOptions extends PaginatedOptions {
@@ -52,7 +62,7 @@ export interface GetSneakersOptions extends PaginatedOptions {
     page?: number;
     releaseDate?: Date | string;
     sku?: string;
-    sort?: string;
+    sort?: SortOption;
     name?: string;
     brand?: string;
 }
@@ -65,6 +75,7 @@ export interface GetSneakersResponse {
 export interface SearchOptions extends PaginatedOptions {
     limit: number;
     query?: string;
+    sort?: SortOption;
 }
 
 export interface SearchResponse {

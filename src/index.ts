@@ -7,6 +7,8 @@ export type {
     SearchOptions,
     SearchResponse,
     Sneaker,
+    SortOption,
+    SortOrder,
     TheSneakerDatabaseClientOptions,
 } from './interfaces';
 export { TheSneakerDatabaseClient } from './TheSneakerDatabaseClient';
