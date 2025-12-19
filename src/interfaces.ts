@@ -38,9 +38,34 @@ export interface CacheOptions {
     skipCache?: boolean;
 }
 
+export type FilterOperator = 'lt' | 'lte' | 'gt' | 'gte' | 'eq';
+
+export const FILTERABLE_FIELDS = ['releaseDate', 'releaseYear', 'retailPrice', 'estimatedMarketValue'] as const;
+
+export type ComparableField = (typeof FILTERABLE_FIELDS)[number];
+
+export type FilterValue = string | number | Date;
+
+export interface FilterOption {
+    field: ComparableField;
+    value: FilterValue;
+    operator?: FilterOperator;
+}
+
+export type SortOrder = 'asc' | 'desc';
+
+export type SortField = 'name' | 'silhouette' | 'retailPrice' | 'releaseDate' | 'releaseYear';
+
+export interface SortOption {
+    field: SortField;
+    order?: SortOrder;
+}
+
 export interface PaginatedOptions extends CacheOptions {
     limit?: number;
     page?: number;
+    sort?: SortOption;
+    filters?: FilterOption;
 }
 
 export interface GetSneakersOptions extends PaginatedOptions {
@@ -49,10 +74,8 @@ export interface GetSneakersOptions extends PaginatedOptions {
     silhouette?: string;
     colorway?: string;
     releaseYear?: string;
-    page?: number;
     releaseDate?: Date | string;
     sku?: string;
-    sort?: string;
     name?: string;
     brand?: string;
 }

@@ -1,7 +1,17 @@
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
 import Keyv from '@keyvhq/core';
 import MockAdapter from 'axios-mock-adapter';
-import type { GetSneakersOptions, GetSneakersResponse, SearchOptions, SearchResponse, Sneaker } from './interfaces';
+import type {
+    FilterOperator,
+    FilterOption,
+    FilterValue,
+    GetSneakersOptions,
+    GetSneakersResponse,
+    SearchOptions,
+    SearchResponse,
+    Sneaker,
+} from './interfaces';
+import { FILTERABLE_FIELDS } from './interfaces';
 import { TheSneakerDatabaseClient } from './TheSneakerDatabaseClient';
 
 describe('TheSneakerDatabaseClient', () => {
@@ -45,6 +55,13 @@ describe('TheSneakerDatabaseClient', () => {
         return request;
     };
 
+    const filterFixtures: Record<FilterOption['field'], { operator: FilterOperator; value: FilterValue }> = {
+        releaseDate: { operator: 'gte', value: new Date('2020-01-01') },
+        releaseYear: { operator: 'gte', value: 2020 },
+        retailPrice: { operator: 'gte', value: 100 },
+        estimatedMarketValue: { operator: 'gte', value: 150 },
+    };
+
     beforeEach(() => {
         cache = new Keyv();
         theSneakerDBClient = new TheSneakerDatabaseClient({ rapidApiKey: 'your-api-key', cache });
@@ -65,14 +82,15 @@ describe('TheSneakerDatabaseClient', () => {
             releaseDate: '2024-08-21',
             sku: 'CZ0858-102',
             releaseYear: '2024',
-            sort: 'release_date',
+            sort: { field: 'releaseDate', order: 'desc' },
             silhouette: 'Air Jordan 1',
         };
         const responseObj: GetSneakersResponse = {
             count: 1,
             results: [sneakerData],
         };
-        mockAxios.onGet('/sneakers', { params: options }).reply(200, responseObj);
+        const expectedParams = { ...options, sort: 'releaseDate:desc' };
+        mockAxios.onGet('/sneakers', { params: expectedParams }).reply(200, responseObj);
         const response = await theSneakerDBClient.getSneakers(options);
 
         expect(response.success).toBe(true);
@@ -82,7 +100,7 @@ describe('TheSneakerDatabaseClient', () => {
         expect(response.response).toEqual(responseObj);
         const request = expectSingleHistoryRequest();
         expect(request.url).toBe('/sneakers');
-        expect(request.params).toEqual(options);
+        expect(request.params).toEqual(expectedParams);
     });
 
     it('should handle getSneakers request with an error', async () => {
@@ -216,6 +234,105 @@ describe('TheSneakerDatabaseClient', () => {
         expect(cached.response.count).toBe(payload.count);
         expect(cached.response.results[0]?.id).toBe(sneakerData.id);
         expect(getHistoryRequests()).toHaveLength(1);
+    });
+
+    it('serializes sort options into API format', async () => {
+        const options: GetSneakersOptions = {
+            limit: 5,
+            sort: { field: 'retailPrice', order: 'asc' },
+        };
+        const payload: GetSneakersResponse = { count: 0, results: [] };
+        mockAxios.onGet('/sneakers', { params: { limit: 5, sort: 'retailPrice:asc' } }).reply(200, payload);
+
+        const response = await theSneakerDBClient.getSneakers(options);
+        expect(response.success).toBe(true);
+        const request = expectSingleHistoryRequest();
+        expect(request.params?.sort).toBe('retailPrice:asc');
+    });
+
+    it('serializes filters into API format', async () => {
+        const options: GetSneakersOptions = {
+            limit: 5,
+            filters: { field: 'releaseYear', operator: 'gte', value: 2020 },
+        };
+        const payload: GetSneakersResponse = { count: 0, results: [] };
+        mockAxios.onGet('/sneakers', { params: { limit: 5, filters: 'releaseYear=gte:2020' } }).reply(200, payload);
+
+        const response = await theSneakerDBClient.getSneakers(options);
+        expect(response.success).toBe(true);
+        const request = expectSingleHistoryRequest();
+        expect(request.params?.filters).toBe('releaseYear=gte:2020');
+    });
+
+    describe('filterable fields', () => {
+        for (const field of FILTERABLE_FIELDS) {
+            it(`serializes ${field} filters into API format`, async () => {
+                const fixture = filterFixtures[field];
+                const options: GetSneakersOptions = {
+                    limit: 5,
+                    filters: { field, operator: fixture.operator, value: fixture.value },
+                };
+                const normalizedValue =
+                    fixture.value instanceof Date ? fixture.value.toISOString().split('T')[0] : String(fixture.value);
+                const filtersParam = `${field}=${fixture.operator}:${normalizedValue}`;
+                const payload: GetSneakersResponse = { count: 0, results: [] };
+                mockAxios.onGet('/sneakers', { params: { limit: 5, filters: filtersParam } }).reply(200, payload);
+
+                const response = await theSneakerDBClient.getSneakers(options);
+                expect(response.success).toBe(true);
+                const request = expectSingleHistoryRequest();
+                expect(request.params?.filters).toBe(filtersParam);
+            });
+        }
+    });
+
+    it('defaults filter operator to eq when omitted', async () => {
+        const options: GetSneakersOptions = {
+            limit: 5,
+            filters: { field: 'retailPrice', value: 200 },
+        };
+        const payload: GetSneakersResponse = { count: 0, results: [] };
+        mockAxios.onGet('/sneakers', { params: { limit: 5, filters: 'retailPrice=eq:200' } }).reply(200, payload);
+
+        const response = await theSneakerDBClient.getSneakers(options);
+        expect(response.success).toBe(true);
+        const request = expectSingleHistoryRequest();
+        expect(request.params?.filters).toBe('retailPrice=eq:200');
+    });
+
+    it('rejects multiple filters passed in a single request', async () => {
+        const options = {
+            limit: 5,
+            filters: [
+                { field: 'releaseYear', operator: 'gte', value: 2000 },
+                { field: 'releaseYear', operator: 'lte', value: 2024 },
+            ],
+        } as unknown as GetSneakersOptions;
+
+        const response = await theSneakerDBClient.getSneakers(options);
+        expect(response.success).toBe(false);
+        if (response.success) {
+            throw new Error('Expected validation failure');
+        }
+        expect(response.error).toBeInstanceOf(Error);
+        expect(response.error?.message).toMatch(/(single|exactly one filter)/i);
+        expect(getHistoryRequests()).toHaveLength(0);
+    });
+
+    it('rejects unsupported filter fields', async () => {
+        const options = {
+            limit: 5,
+            filters: { field: 'unknown-field', value: 10 },
+        } as unknown as GetSneakersOptions;
+
+        const response = await theSneakerDBClient.getSneakers(options);
+        expect(response.success).toBe(false);
+        if (response.success) {
+            throw new Error('Expected validation failure');
+        }
+        expect(response.error).toBeInstanceOf(Error);
+        expect(response.error?.message).toMatch(/not filterable/i);
+        expect(getHistoryRequests()).toHaveLength(0);
     });
 
     it('respects skipCache flag', async () => {
