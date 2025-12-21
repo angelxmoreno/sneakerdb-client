@@ -6,6 +6,14 @@
 * added sneaker result filtering ([4a36072](https://github.com/angelxmoreno/sneakerdb-client/commit/4a360723b3a57a7a18f922cd0bd4809cd747e571))
 * added sneaker result sorting ([84d6d15](https://github.com/angelxmoreno/sneakerdb-client/commit/84d6d15ffed002cf0ab48493893a693ab53a0c23))
 
+## [2.3.0](https://github.com/angelxmoreno/sneakerdb-client/compare/v2.2.0...v2.3.0) (2025-12-21)
+
+
+### Features
+
+* **client:** align filtering with API usage ([7514a03](https://github.com/angelxmoreno/sneakerdb-client/commit/7514a03001f12a6302a64ed2bc6e8ce463e42a4c))
+* **client:** align filtering with API usage ([e39a526](https://github.com/angelxmoreno/sneakerdb-client/commit/e39a526fa5025e79d1dc0fb2d142928229be8144))
+
 ## [2.1.1](https://github.com/angelxmoreno/sneakerdb-client/compare/2.1.0...2.1.1) (2025-12-17)
 
 
