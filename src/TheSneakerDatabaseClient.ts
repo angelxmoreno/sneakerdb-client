@@ -78,7 +78,6 @@ export class TheSneakerDatabaseClient {
             const queryParams = this.prepareQueryParams(requestParams);
             const cacheKey = this.createCacheKey(uri, queryParams);
             const shouldUseCache = Boolean(this.cache && !cacheOptions.skipCache);
-
             if (shouldUseCache && this.cache) {
                 const cached = await this.cache.get(cacheKey);
                 if (typeof cached !== 'undefined') {
@@ -147,9 +146,8 @@ export class TheSneakerDatabaseClient {
         }
 
         if (typeof normalized.filters !== 'undefined') {
-            const filter = this.ensureSingleFilter(normalized.filters);
-            normalized.filters = this.serializeFilter(filter);
-            if (typeof normalized.filters === 'undefined') {
+            const applied = this.applyFilterParams(normalized, normalized.filters);
+            if (!applied) {
                 delete normalized.filters;
             }
         } else {
@@ -169,52 +167,76 @@ export class TheSneakerDatabaseClient {
         return `${field}:${direction}`;
     }
 
-    protected ensureSingleFilter(input: unknown): FilterOption | undefined {
-        if (typeof input === 'undefined') {
-            return undefined;
+    protected applyFilterParams(normalized: Record<string, unknown>, input: unknown) {
+        const filters = this.normalizeFilters(input);
+        if (filters.length === 0) {
+            return false;
         }
 
-        if (Array.isArray(input)) {
-            throw new Error('filters accepts exactly one filter object per request.');
+        for (const filter of filters) {
+            if (typeof normalized[filter.field] !== 'undefined') {
+                throw new Error(
+                    `filters.${String(filter.field)} conflicts with an existing query parameter. Provide the filter once.`
+                );
+            }
+
+            normalized[filter.field] = this.serializeFilterValueWithOperator(filter);
         }
 
-        if (!input || typeof input !== 'object') {
-            throw new Error('filters must be an object with field, operator, and value.');
-        }
-
-        const candidate = input as FilterOption;
-
-        if (!candidate.field) {
-            throw new Error('filters.field is required when filters is provided.');
-        }
-
-        if (!FILTERABLE_FIELD_SET.has(candidate.field as ComparableField)) {
-            throw new Error(
-                `Field ${String(candidate.field)} is not filterable. Allowed fields: ${FILTERABLE_FIELDS.join(', ')}.`
-            );
-        }
-
-        if (typeof candidate.value === 'undefined' || candidate.value === null) {
-            throw new Error('filters.value is required when filters is provided.');
-        }
-
-        if (typeof candidate.operator !== 'undefined' && !FILTER_OPERATOR_SET.has(candidate.operator)) {
-            throw new Error(
-                `Operator ${String(candidate.operator)} is invalid. Allowed operators: ${FILTER_OPERATORS.join(', ')}.`
-            );
-        }
-
-        return candidate;
+        delete normalized.filters;
+        return true;
     }
 
-    protected serializeFilter(filter?: FilterOption) {
-        if (!filter?.field) {
-            return undefined;
+    protected normalizeFilters(input: unknown): FilterOption[] {
+        if (typeof input === 'undefined') {
+            return [];
         }
 
+        const filters = Array.isArray(input) ? input : [input];
+        const normalized: FilterOption[] = [];
+        const seenFields = new Set<ComparableField>();
+
+        for (const candidate of filters) {
+            if (!candidate || typeof candidate !== 'object') {
+                throw new Error('filters must be an object with field, operator, and value.');
+            }
+
+            const { field, operator, value } = candidate as FilterOption;
+            if (!field) {
+                throw new Error('filters.field is required when filters is provided.');
+            }
+
+            if (!FILTERABLE_FIELD_SET.has(field as ComparableField)) {
+                throw new Error(
+                    `Field ${String(field)} is not filterable. Allowed fields: ${FILTERABLE_FIELDS.join(', ')}.`
+                );
+            }
+
+            if (seenFields.has(field)) {
+                throw new Error(`filters already includes ${String(field)}. Use a single filter per field.`);
+            }
+            seenFields.add(field);
+
+            if (typeof value === 'undefined' || value === null) {
+                throw new Error('filters.value is required when filters is provided.');
+            }
+
+            if (typeof operator !== 'undefined' && !FILTER_OPERATOR_SET.has(operator)) {
+                throw new Error(
+                    `Operator ${String(operator)} is invalid. Allowed operators: ${FILTER_OPERATORS.join(', ')}.`
+                );
+            }
+
+            normalized.push({ field, value, operator });
+        }
+
+        return normalized;
+    }
+
+    protected serializeFilterValueWithOperator(filter: FilterOption) {
         const operator: FilterOperator = filter.operator ?? 'eq';
         const value = this.serializeFilterValue(filter.value);
-        return `${filter.field}=${operator}:${value}`;
+        return operator === 'eq' ? value : `${operator}:${value}`;
     }
 
     protected serializeFilterValue(value: FilterValue) {

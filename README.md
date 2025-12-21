@@ -36,7 +36,8 @@ client.getSneakers({ limit: 15 }).then(result => {
 // Example: Filter and sort
 client.getSneakers({
   brand: 'Jordan',
-  filters: { field: 'releaseYear', operator: 'gte', value: 2019 }, // filterable fields: releaseDate, releaseYear, retailPrice, estimatedMarketValue
+  releaseYear: '2025',
+  filters: { field: 'retailPrice', operator: 'lte', value: 400 }, // filterable fields: releaseDate, releaseYear, retailPrice
   sort: { field: 'retailPrice', order: 'desc' }, // allowed fields: name, silhouette, retailPrice, releaseDate, releaseYear
 }).then(result => {
   if (result.success) {
@@ -44,9 +45,10 @@ client.getSneakers({
   }
 });
 
-// Note: The Sneaker Database API currently accepts a single filter expression per request.
-// Supported filter fields: releaseDate, releaseYear, retailPrice, estimatedMarketValue.
-// Passing multiple filters or unsupported fields will cause the client (or API) to throw an "Invalid query parameter filters" error.
+// Note: The Sneaker Database API expects query parameters like `brand`, `gender`, or `releaseYear`
+// directly on the URL, and comparison filters are sent using the field name plus an operator
+// (e.g., `releaseYear=gte:2019` or `releaseDate=2024-08-21`). The `filters` helper above simply
+// formats those query parameters for you and validates the allowed fields.
 ```
 
 ## Development

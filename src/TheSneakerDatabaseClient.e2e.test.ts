@@ -1,9 +1,8 @@
 import { beforeAll, beforeEach, describe, expect, it } from 'bun:test';
 import Keyv from '@keyvhq/core';
-import type { AxiosError } from 'axios';
-
+import KeyvSqlite from '@keyvhq/sqlite';
 import type {
-    GetSneakersOptions,
+    FilterOption,
     GetSneakersResponse,
     MethodResponse,
     SearchResponse,
@@ -12,6 +11,7 @@ import type {
 } from './interfaces';
 import { TheSneakerDatabaseClient } from './TheSneakerDatabaseClient';
 
+type FilterOptionWithCompare = FilterOption & { compare: (value: string | number) => boolean };
 type NonNullableResponse<T> = Exclude<T, undefined>;
 
 const rapidApiKey = Bun.env.RAPID_API_KEY;
@@ -22,23 +22,57 @@ let cache: Keyv;
 const expectSuccessful = <T>(result: MethodResponse<T>, exceptionMessage?: () => string): NonNullableResponse<T> => {
     if (!result.success) {
         const errorMessage = exceptionMessage ? exceptionMessage() : 'Expected request to succeed';
-        console.error(errorMessage);
+        console.error({ result }, errorMessage);
         throw new Error(errorMessage);
     }
+
     expect(result.success).toBe(true);
     return result.response as NonNullableResponse<T>;
 };
 
 if (!shouldRunE2E) {
-    describe.skip('TheSneakerDatabaseClient:e2e', () => {});
+    describe('TheSneakerDatabaseClient:e2e', () => {});
 } else {
     describe('TheSneakerDatabaseClient:e2e', () => {
         beforeAll(() => {
-            cache = new Keyv();
+            cache = new Keyv({
+                namespace: 'testv1',
+                store: new KeyvSqlite('sqlite://testCache.sqlite'),
+                ttl: 60 * 60 * 24 * 1000,
+            });
             client = new TheSneakerDatabaseClient({ rapidApiKey: rapidApiKey ?? '', cache });
         });
         beforeEach(async () => {
             await Bun.sleep(1500);
+        });
+        describe.skip('using releaseYear', () => {
+            it('returns results for 2024', async () => {
+                const results = await client.getSneakers({
+                    limit: 10,
+                    releaseYear: '2024',
+                });
+                const payload = expectSuccessful<GetSneakersResponse>(results);
+                console.log({ payload });
+                expect(payload.count).toBeGreaterThan(0);
+            });
+            it('returns filtered results for 2024', async () => {
+                const results = await client.getSneakers({
+                    limit: 10,
+                    filters: { field: 'releaseYear', operator: 'eq', value: 2024 },
+                });
+                const payload = expectSuccessful<GetSneakersResponse>(results);
+                expect(payload.count).toBeGreaterThan(0);
+            });
+
+            it('returns direct results for 2024', async () => {
+                const results = await client.getSneakers({
+                    limit: 10,
+                    releaseYear: 'eq:2024',
+                });
+
+                const payload = expectSuccessful<GetSneakersResponse>(results);
+                expect(payload.count).toBeGreaterThan(0);
+            });
         });
         describe('->getSneakers()', () => {
             it('returns paginated sneaker data', async () => {
@@ -63,48 +97,75 @@ if (!shouldRunE2E) {
                 it(`supports sorting by ${field}`, async () => {
                     const result = await client.getSneakers({
                         limit: 10,
-                        brand: 'Jordan',
+                        brand: 'NIKE',
                         sort: { field, order: 'desc' },
                     });
                     expectSuccessful<GetSneakersResponse>(result, () => `${field} is not valid for sorting`);
                 });
             }
 
-            it('guards against passing multiple filters to the client', async () => {
-                const options = {
-                    limit: 10,
-                    filters: [
-                        { field: 'releaseYear', operator: 'gte', value: 2000 },
-                        { field: 'releaseYear', operator: 'lte', value: new Date().getFullYear() },
-                    ],
-                } as unknown as GetSneakersOptions;
-
-                const result = await client.getSneakers(options);
-                expect(result.success).toBe(false);
-                if (result.success) {
-                    throw new Error('Expected guard rails to reject multiple filters');
-                }
-                expect(result.error).toBeInstanceOf(Error);
-                expect(result.error?.message).toMatch(/(single|exactly one filter)/i);
-            });
-
-            it('rejects multiple filters at the API level', async () => {
-                const currentYear = new Date().getFullYear();
-                const filtersParam = `releaseYear=gte:2000,releaseYear=lte:${currentYear}`;
-                let caught: AxiosError<{ message?: string }> | undefined;
-
-                try {
-                    await client.client.get<GetSneakersResponse>('/sneakers', {
-                        params: { limit: 10, filters: filtersParam },
+            const filterableFields: FilterOptionWithCompare[] = [
+                {
+                    field: 'releaseDate',
+                    operator: 'gte',
+                    value: new Date('2024-01-01'),
+                    compare: (v) => new Date(v).getTime() >= new Date('2024-01-01').getTime(),
+                },
+                {
+                    field: 'retailPrice',
+                    operator: 'gte',
+                    value: 150,
+                    compare: (v) => Number(v) >= 150,
+                },
+            ];
+            for (const filter of filterableFields) {
+                it(`supports filtering by ${filter.field}`, async () => {
+                    const result = await client.getSneakers({
+                        limit: 10,
+                        filters: filter,
                     });
-                    throw new Error('Expected RapidAPI to reject combined filters');
-                } catch (error) {
-                    caught = error as AxiosError<{ message?: string }>;
+                    const payload = expectSuccessful<GetSneakersResponse>(result);
+
+                    expect(payload.results.length).toBeGreaterThan(0);
+                    for (const sneaker of payload.results) {
+                        // biome-ignore lint/suspicious/noExplicitAny: need it
+                        const compare = filter.compare(sneaker[filter.field] as any);
+                        if (!compare) {
+                            console.error(
+                                `Filter comparison failed for ${filter.field} for sneaker value ${sneaker[filter.field]}`,
+                                {
+                                    filter,
+                                    sneaker,
+                                }
+                            );
+                        }
+                        expect(compare).toBe(true);
+                    }
+                });
+            }
+
+            it('supports combining multiple filters', async () => {
+                const filters: FilterOption[] = [
+                    { field: 'releaseDate', operator: 'gte', value: new Date('2024-01-01') },
+                    { field: 'retailPrice', operator: 'gte', value: 150 },
+                ];
+                const result = await client.getSneakers({
+                    limit: 10,
+                    filters,
+                });
+                const payload = expectSuccessful<GetSneakersResponse>(result);
+
+                if (payload.results.length === 0) {
+                    console.warn('Combined filter request returned 0 results – RapidAPI may not have matching data.');
+                    return;
                 }
 
-                expect(caught).toBeDefined();
-                expect(caught?.response?.status).toBeGreaterThanOrEqual(400);
-                expect(caught?.response?.data?.message).toMatch(/invalid query parameter filters/i);
+                for (const sneaker of payload.results) {
+                    expect(new Date(sneaker.releaseDate).getTime()).toBeGreaterThanOrEqual(
+                        new Date('2024-01-01').getTime()
+                    );
+                    expect(sneaker.retailPrice).toBeGreaterThanOrEqual(150);
+                }
             });
         });
 
@@ -142,7 +203,7 @@ if (!shouldRunE2E) {
 
         describe('->search()', () => {
             it('returns matched sneakers', async () => {
-                const result = await client.search({ query: 'Jordan', limit: 10 });
+                const result = await client.search({ query: 'NIKE', limit: 10 });
                 const payload = expectSuccessful<SearchResponse>(result);
 
                 expect(payload.count).toBeGreaterThan(0);
