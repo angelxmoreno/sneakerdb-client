@@ -40,7 +40,7 @@ export interface CacheOptions {
 
 export type FilterOperator = 'lt' | 'lte' | 'gt' | 'gte' | 'eq';
 
-export const FILTERABLE_FIELDS = ['releaseDate', 'releaseYear', 'retailPrice', 'estimatedMarketValue'] as const;
+export const FILTERABLE_FIELDS = ['releaseDate', 'releaseYear', 'retailPrice'] as const;
 
 export type ComparableField = (typeof FILTERABLE_FIELDS)[number];
 
@@ -65,7 +65,7 @@ export interface PaginatedOptions extends CacheOptions {
     limit?: number;
     page?: number;
     sort?: SortOption;
-    filters?: FilterOption;
+    filters?: FilterOption | FilterOption[];
 }
 
 export interface GetSneakersOptions extends PaginatedOptions {
